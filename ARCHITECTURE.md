@@ -14,7 +14,7 @@ kdp-automation/            (repo root)
     storage/                 StorageProvider abstraction (Local, S3-compatible)
     document-engine/        Interior generation (PDF/EPUB/DOCX)
     cover-engine/            Cover generation, spine calculator
-    kdp-validator/           Preflight / KDP compliance validation — Phase 9
+    kdp-validator/           Preflight / KDP compliance validation
   infrastructure/
     docker/                 Dockerfiles
     nginx/                  Reverse proxy config
@@ -225,7 +225,14 @@ ValidationResult, Export, SystemLog).
   the page-count-dependent compliance check (verifying a given render
   actually satisfies KDP's rules for its specific page count) is Phase 9's
   job (the KDP validator). Phase 7's output should be read as "well-formatted"
-  rather than "KDP-certified compliant" until Phase 9 lands.
+  rather than "KDP-certified compliant" until Phase 9 lands. **Phase 9 closes
+  this loop**: the PDF renderer now reports its actual rendered page count
+  (`GeneratedInterior.pageCount`, plumbed through to the `Interior` model and
+  `InteriorDto`), and a new `@kdp/kdp-validator` rule warns when a PDF
+  interior exceeds 700 pages, per KDP's publicly documented margin guidance.
+  That threshold is guidance to verify against KDP's current official
+  specification, not an asserted pass/fail — the figures come from published
+  formatting guidance, not a live compliance API.
 - **`packages/cover-engine`'s spine-width calculation uses `BookSpecification`'s
   *estimated* page count, not any actually-generated interior's real page
   count** (Phase 8): generating a cover deliberately doesn't require an

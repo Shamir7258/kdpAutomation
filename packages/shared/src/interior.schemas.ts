@@ -21,5 +21,7 @@ export interface InteriorDto {
   trimSizeId: string;
   url: string;
   fileSizeBytes: number;
+  /** Only set for paginated formats (PDF) — see GeneratedInterior.pageCount in @kdp/document-engine. */
+  pageCount?: number;
   createdAt: string;
 }

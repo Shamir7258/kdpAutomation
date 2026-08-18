@@ -17,6 +17,8 @@ const interiorSchema = new Schema(
     storageKey: { type: String, required: true },
     url: { type: String, required: true },
     fileSizeBytes: { type: Number, required: true },
+    /** Only set for paginated formats (PDF) — see GeneratedInterior.pageCount in @kdp/document-engine. */
+    pageCount: { type: Number },
   },
   { timestamps: true },
 );

@@ -17,6 +17,7 @@
     "@kdp/config": "0.1.0",
     "@kdp/cover-engine": "0.1.0",
     "@kdp/document-engine": "0.1.0",
+    "@kdp/kdp-validator": "0.1.0",
     "@kdp/shared": "0.1.0",
     "@kdp/storage": "0.1.0",
     "bcrypt": "^5.1.1",

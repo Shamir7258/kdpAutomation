@@ -98,5 +98,5 @@ export async function generatePdf(manuscript: BookManuscript, options: InteriorO
 
   doc.end();
   const data = await finished;
-  return { data, contentType: 'application/pdf', fileExtension: 'pdf' };
+  return { data, contentType: 'application/pdf', fileExtension: 'pdf', pageCount };
 }

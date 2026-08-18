@@ -37,6 +37,7 @@ describe('generateInterior', () => {
     expect(result.fileExtension).toBe('pdf');
     expect(result.data.subarray(0, 5).toString('ascii')).toBe('%PDF-');
     expect(result.data.byteLength).toBeGreaterThan(1000);
+    expect(result.pageCount).toBeGreaterThan(0);
   });
 
   it('generates a valid DOCX (a ZIP archive, starts with the PK magic bytes)', async () => {

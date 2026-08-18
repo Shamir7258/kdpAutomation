@@ -24,6 +24,7 @@ function toDto(doc: InteriorDocument): InteriorDto {
     trimSizeId: doc.trimSizeId,
     url: doc.url,
     fileSizeBytes: doc.fileSizeBytes,
+    pageCount: doc.pageCount ?? undefined,
     createdAt: doc.createdAt.toISOString(),
   };
 }
@@ -128,6 +129,7 @@ export async function runInteriorGeneration(data: InteriorGenerationJobData): Pr
     storageKey: stored.key,
     url: stored.url,
     fileSizeBytes: stored.sizeBytes,
+    pageCount: result.pageCount,
   });
 
   const projectDoc = await ProjectModel.findOne({ _id: projectId, userId });

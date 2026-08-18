@@ -194,6 +194,7 @@ render is generated and stored via the configured `StorageProvider`.
 | `storageKey` | string | `interiors/<userId>/<projectId>/<batchId>.<ext>` — namespaced per the platform-wide `<category>/<userId>/...` convention that `/api/files/*` relies on for ownership checks |
 | `url` | string | Local dev: served via `/api/files/*`. S3: a presigned GET URL (1-hour TTL) |
 | `fileSizeBytes` | number | |
+| `pageCount` | number, optional | Added in Phase 9. The renderer's actual rendered page count, from `doc.bufferedPageRange().count` — only ever set when `format` is `'pdf'`; left `undefined` for `epub` (reflowable, no fixed page count) and `docx` (true page count depends on the reader's own renderer/font substitution). Used by the KDP validator's margin/page-count consistency rule (warns above 700 pages) |
 | timestamps | Date | `createdAt`/`updatedAt` |
 
 ## `cover` (Phase 8)
@@ -224,3 +225,5 @@ There's no relational schema to migrate yet. `npm run migrate` runs
 for every model — the real story for keeping indexes in sync in
 production, where `autoIndex` is disabled on boot (see
 `apps/backend/src/db/mongoose.ts`).
+
+Phase 9's KDP validation report is deliberately **not** a stored collection — it's computed fresh from existing data (spec, metadata, outline, content, most recent interior/cover) on every request, so there's no `validations` model and nothing here to migrate for it.

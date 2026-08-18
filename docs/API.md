@@ -161,6 +161,14 @@ Async, mirrors interior generation — `POST` requires only a `BookSpecification
 | POST | `/projects/:id/cover` | `{ paperType: 'white' \| 'cream' \| 'color', stylePrompt? }`. Requires a `BookSpecification` to exist (400 otherwise). Spine width is calculated from the specification's `estimatedPageCount` (falling back to 100), not any actually-generated interior's real page count — see ARCHITECTURE.md §5. |
 | GET | `/projects/:id/cover` | `CoverDto[]` — all successful renders for the project, newest first: `{ id, projectId, batchId, paperType, pageCount, spineWidthIn, ebookCoverUrl, wrapCoverPdfUrl, createdAt }`. |
 
+## Validation (Phase 9)
+
+**Synchronous** — unlike Interior/Cover above, this is not a queued job: no `202`, no polling `.../jobs`, no stored history. `GET` loads the project's current spec/metadata/outline/content plus its most recent `Interior`/`Cover`, runs the configurable rule set from `@kdp/kdp-validator`, and returns a freshly computed report on every call.
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| GET | `/projects/:id/validation` | `ValidationReportDto` — `{ findings: ValidationFindingDto[], readyToPublish: boolean, checkedAt }`. Each finding is `{ ruleId, category: 'metadata' \| 'content' \| 'interior' \| 'cover', severity: 'error' \| 'warning', message }`. `readyToPublish` is `true` only when there are zero `error`-severity findings — `warning` findings never block it. |
+
 ## Prompt templates (Phase 2, admin-only)
 
 | Method | Path | Notes |

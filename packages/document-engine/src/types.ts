@@ -28,4 +28,8 @@ export interface GeneratedInterior {
   data: Buffer;
   contentType: string;
   fileExtension: string;
+  /** Actual rendered page count — only meaningful for paginated formats (PDF). Reflowable
+   *  formats (EPUB) have no fixed page count; DOCX's true page count depends on the reader's
+   *  renderer/font substitution, so it's left undefined rather than reporting a guess. */
+  pageCount?: number;
 }
