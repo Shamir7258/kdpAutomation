@@ -157,6 +157,27 @@ older runs stay queryable.
 | `summary` | string | AI-generated overview for this pass |
 | `findings[]` | `{ type, description, severity: 'low'\|'medium'\|'high', location? }` | Zero or more specific issues found by this pass |
 
+## `metadata` (Phase 6)
+
+One document per project (`projectId` unique-indexed) — a "current draft," not
+append-only like `contentversions`/`editpasses`. `POST /metadata` upserts it,
+overwriting `aiSuggestions` and re-seeding the editable fields; `PATCH`
+finalizes the editable fields in place without touching `aiSuggestions`, so
+regenerating never silently destroys what the human already picked without
+them seeing the new suggestions first.
+
+| Field | Type | Notes |
+|---|---|---|
+| `projectId`, `userId` | ObjectId | |
+| `title`, `subtitle`, `seriesName` | string | Publisher-finalized, editable via PATCH |
+| `seriesNumber` | number? | |
+| `description` | string | ≤4000 chars (real KDP limit) |
+| `keywords` | string[] | ≤7 phrases, ≤50 chars each (real KDP limit) |
+| `categories` | string[] | ≤10, free text — not validated against a live/scraped Amazon category taxonomy (§7) |
+| `authorName`, `primaryMarketplace` | string | |
+| `pricing` | `{ currency, listPrice }?` | Manual only — never AI-generated (no sales/pricing-performance claims) |
+| `aiSuggestions` | `{ titles[], subtitles[], description, keywords[], categories[] }` | Raw output of the last `generateMetadata` call, kept for reference even after the human edits the fields above |
+
 ## Migrations
 
 There's no relational schema to migrate yet. `npm run migrate` runs

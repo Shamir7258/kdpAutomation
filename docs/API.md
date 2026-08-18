@@ -125,6 +125,16 @@ Async, mirrors content generation — `POST` enqueues a job on the `editing` Bul
 | POST | `/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes` | Enqueues a 7-pass run: grammar, clarity, consistency, structure, fact_checking, ai_detection_risk, final_review. The `ai_detection_risk` pass is an editorial-quality heuristic (repetitive/generic phrasing) — it makes no claim about evading or bypassing any AI-detection tool. |
 | GET | `/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes` | All passes across all runs, newest first. Filter client-side by `batchId` to show one run's results (the frontend panel shows the latest batch). |
 
+## Metadata (Phase 6)
+
+One canonical metadata doc per project. `POST` (re)generates AI suggestions and upserts the doc — seeding the editable fields from the suggestions on first call, overwriting both on subsequent calls (this is a "regenerate the draft" action, not an append-only history like `ContentVersion`). `PATCH` is how the publisher finalizes fields without discarding the `aiSuggestions` record.
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| POST | `/projects/:id/metadata` | No body. Requires a `BookSpecification` to exist first (404 otherwise). Seeds `title`/`subtitle`/`description`/`keywords` (first 7)/`categories` (first 2) from the AI suggestions; marks `workflowStatus.METADATA` completed. |
+| GET | `/projects/:id/metadata` | 404 if not generated yet. |
+| PATCH | `/projects/:id/metadata` | All fields optional: `title`, `subtitle`, `seriesName`, `seriesNumber`, `description` (≤4000 chars), `keywords` (≤7, ≤50 chars each — real KDP limits), `categories` (≤10, free text — not validated against a live/scraped Amazon taxonomy, §7), `authorName`, `primaryMarketplace`, `pricing: { currency, listPrice }` (manual only — the AI never suggests a price). |
+
 ## Prompt templates (Phase 2, admin-only)
 
 | Method | Path | Notes |

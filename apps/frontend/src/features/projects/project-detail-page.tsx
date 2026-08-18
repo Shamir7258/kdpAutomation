@@ -12,6 +12,7 @@ import { BookGeneratorPanel } from '@/features/book-ideas/book-generator-panel';
 import { ResearchPanel } from '@/features/research/research-panel';
 import { OutlinePanel } from '@/features/outline/outline-panel';
 import { ContentPanel } from '@/features/content/content-panel';
+import { MetadataPanel } from '@/features/metadata/metadata-panel';
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -81,10 +82,12 @@ export function ProjectDetailPage() {
 
       <ContentPanel project={project} />
 
+      <MetadataPanel projectId={project.id} />
+
       <Card>
         <CardContent className="p-6 text-sm text-muted-foreground">
-          Editing, interior, cover, and validation land in upcoming phases (see PLAN.md) — research, book ideas,
-          specification, outline, and content generation are live now.
+          Interior, cover, and validation land in upcoming phases (see PLAN.md) — research, book ideas,
+          specification, outline, content generation/editing, and metadata are live now.
         </CardContent>
       </Card>
     </div>

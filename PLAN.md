@@ -73,7 +73,15 @@ vertical slice (backend + frontend + tests) before moving to the next.
   - [x] Backend tests: AI assistant (auth/validation/selection-fallback/alternatives/fact-check — 7 tests), manual-edit versioning (3 tests), editing-pipeline unit logic (2 tests, no Redis), editing-pipeline BullMQ round trip (3 tests, gated on Redis) — 15 new tests, all via `MockAIProvider`
   - [x] Frontend verified via live Playwright walkthrough (register → project → research → ideas → spec → outline → generate content → open editor → type → save → AI rewrite → insert → versions tab → run editing pipeline → passes rendered). Found and fixed two real bugs during that walkthrough — see TODO.md
 
-- [ ] **Phase 6 — Metadata generator**
+- [x] **Phase 6 — Metadata generator**
+  - [x] `Metadata` model — one canonical doc per project (like `BookSpecification`); `POST` generates AI suggestions (titles/subtitles/description/keywords/categories via `AIProvider.generateMetadata`, already built in Phase 2's `packages/ai`) and seeds the editable fields, `PATCH` finalizes them without discarding the raw `aiSuggestions` record
+  - [x] Real KDP publishing constraints encoded as validation, not fabricated: up to 7 keyword phrases (50 chars each), ~4000-char description cap. Categories are free text, not validated against a live/scraped Amazon taxonomy (§7 — no scraping)
+  - [x] Pricing is manual-only (currency + list price) — the AI never suggests a price, to avoid any implication of a sales/performance promise
+  - [x] Frontend `MetadataPanel` folded into the project detail page (same pattern as Research/Ideas/Outline/Content, not a standalone top-level nav item) — AI title alternatives are clickable chips, keyword/category counters show the KDP limits live
+  - [x] Removed the orphaned top-level `/metadata` sidebar nav item + `ComingSoonPage` route now that the real per-project panel exists — matches the precedent set in Phase 3 for Research
+  - [x] Backend tests: generate seeds fields + marks `workflowStatus.METADATA` completed, 404 without a specification first, 404 fetching before generation, PATCH finalizes without discarding suggestions, keyword-limit validation, cross-user 404 isolation — 7 tests, all via `MockAIProvider`
+  - [x] Frontend verified via live Playwright walkthrough (generate → AI suggestions shown → edit keywords/author/price → save → persisted)
+  - [x] `docs/API.md` / `docs/DATABASE.md` updated for Phase 6 endpoints/models
 
 - [ ] **Phase 7 — Interior generation** (`packages/document-engine`: PDF/EPUB/DOCX, trim sizes, templates)
 

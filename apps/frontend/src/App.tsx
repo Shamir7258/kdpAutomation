@@ -32,7 +32,6 @@ export default function App() {
                 <Route path="/projects/:id" element={<ProjectDetailPage />} />
                 <Route path="/interior" element={<ComingSoonPage title="Interior" phase="Phase 7" />} />
                 <Route path="/cover" element={<ComingSoonPage title="Cover" phase="Phase 8" />} />
-                <Route path="/metadata" element={<ComingSoonPage title="Metadata" phase="Phase 6" />} />
                 <Route path="/validation" element={<ComingSoonPage title="Validation" phase="Phase 9" />} />
                 <Route path="/exports" element={<ComingSoonPage title="Exports" phase="Phase 10" />} />
                 <Route path="/settings" element={<SettingsPage />} />

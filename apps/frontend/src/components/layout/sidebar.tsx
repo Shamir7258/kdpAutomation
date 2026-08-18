@@ -5,19 +5,24 @@ import {
   Sparkles,
   BookOpen,
   Image,
-  Tags,
   ShieldCheck,
   Package,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Metadata (Phase 6) deliberately has no standalone nav item — like
+ * Research/Ideas/Outline/Content/Editor before it, it's project-scoped and
+ * lives inside the project detail page, not as an account-level page.
+ * Interior/Cover/Validation/Exports keep their placeholder pages until
+ * their phases land the same way.
+ */
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/interior', label: 'Interior', icon: BookOpen },
   { to: '/cover', label: 'Cover', icon: Image },
-  { to: '/metadata', label: 'Metadata', icon: Tags },
   { to: '/validation', label: 'Validation', icon: ShieldCheck },
   { to: '/exports', label: 'Exports', icon: Package },
   { to: '/settings', label: 'Settings', icon: Settings },

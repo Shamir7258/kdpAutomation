@@ -22,6 +22,7 @@ import { SectionModel } from '../modules/outline/section.model.js';
 import { JobModel } from '../modules/jobs/job.model.js';
 import { ContentVersionModel } from '../modules/content-versions/content-version.model.js';
 import { EditPassModel } from '../modules/editing/edit-pass.model.js';
+import { MetadataModel } from '../modules/metadata/metadata.model.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
@@ -39,6 +40,7 @@ async function main(): Promise<void> {
     JobModel,
     ContentVersionModel,
     EditPassModel,
+    MetadataModel,
   ]) {
     await model.syncIndexes();
     logger.info({ model: model.modelName }, 'indexes synced');

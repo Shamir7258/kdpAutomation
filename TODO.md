@@ -76,6 +76,17 @@ See PLAN.md for phase-level roadmap. This file tracks granular in-flight tasks.
   2. `EditPassesPanel`'s `passesQuery` had no invalidation trigger when the editing-pipeline job finished — unlike `SectionContentRow`/`BookEditorPage`, nothing refetched it after `jobsQuery` observed `status: 'completed'`. With the mock provider (job completes in tens of milliseconds), the panel would sit on "No editing pipeline runs yet." indefinitely even though all 7 passes existed server-side. Fixed with the same `useRef`-tracked status-transition `useEffect` pattern already used elsewhere in this codebase (see Phase 4's `SectionContentRow` fix above).
 - [x] `docs/API.md` / `docs/DATABASE.md` updated for Phase 5 endpoints/models
 
+## Phase 6 — Metadata generator
+- [x] `packages/shared/src/metadata.schemas.ts` — `updateMetadataSchema` (all fields optional, for PATCH), `MetadataDto`/`MetadataAiSuggestionsDto`. Real KDP limits encoded directly (7 keywords × 50 chars, 4000-char description), not invented
+- [x] Backend: `Metadata` model (one per project, `projectId` unique-indexed), `metadata.service.ts` (`generate`/`getByProject`/`update`), mounted at `/api/projects/:id/metadata`
+- [x] `generate` reuses `AIProvider.generateMetadata` (already existed since Phase 2, unused until now) + a `buildBookContext` helper (spec + niche/audience/tone + chapter titles if an outline exists) — upserts the doc so regenerating overwrites `aiSuggestions` and re-seeds the editable fields, matching outline's "regenerate replaces" convention rather than content's append-only versioning (a metadata draft isn't the kind of artifact that needs full version history — the human's finalized edits are what matters, and those live in the same doc's top-level fields, separate from `aiSuggestions`)
+- [x] `sync-indexes.ts` includes `MetadataModel`
+- [x] Backend tests: 7 (auth required, generate seeds fields + marks workflow completed, 404 without spec, 404 before generation, PATCH finalizes without discarding suggestions, keyword-limit validation, cross-user isolation)
+- [x] Frontend: `metadata-panel.tsx` + new `Textarea` shadcn component, folded into `project-detail-page.tsx` (not a standalone route)
+- [x] Removed `/metadata` from the sidebar `NAV_ITEMS` and its `ComingSoonPage` route in `App.tsx` — metadata is project-scoped, like Research/Outline/Content, not an account-level page. (Interior/Cover/Validation/Exports keep their placeholders until their own phases land the same way — this is the pattern going forward, noted in `sidebar.tsx`.)
+- [x] Live Playwright walkthrough (generate → suggestions rendered as clickable title chips → edit keywords/author/price → save → persisted correctly) — no new bugs found this phase
+- [x] `docs/API.md` / `docs/DATABASE.md` updated for Phase 6 endpoints/models
+
 ## Notes / follow-ups
 - Frontend has no component/unit tests yet (`npm run test -w @kdp/frontend`
   passes via `--passWithNoTests` — it was failing the root `npm test`
