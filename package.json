@@ -1,0 +1,36 @@
+{
+  "name": "kdp-automation",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Production-grade Amazon KDP book automation platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w @kdp/backend\" \"npm run dev -w @kdp/frontend\"",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up --build",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "docker:dev:up": "docker compose -f infrastructure/docker/docker-compose.dev.yml up -d",
+    "docker:dev:down": "docker compose -f infrastructure/docker/docker-compose.dev.yml down",
+    "migrate": "npm run migrate -w @kdp/backend"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}

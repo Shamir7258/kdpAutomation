@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+!apps/*/.env.example
+*.log
+.DS_Store
+.turbo/
+*.tsbuildinfo
+apps/backend/uploads/
+apps/backend/data/
+.vscode/*
+!.vscode/extensions.json

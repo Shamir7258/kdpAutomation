@@ -1,0 +1,238 @@
+# ARCHITECTURE.md — KDP Automation Platform
+
+## 1. Monorepo layout
+
+```
+kdp-automation/            (repo root)
+  apps/
+    backend/               Express API (TypeScript)
+    frontend/               React + Vite SPA (TypeScript)
+  packages/
+    shared/                 Cross-cutting types, zod schemas, API contracts
+    config/                 Strongly typed env configuration (zod-validated)
+    ai/                     AIProvider abstraction (Claude, OpenAI, Mock)
+    storage/                 StorageProvider abstraction (Local, S3-compatible)
+    document-engine/        Interior generation (PDF/EPUB/DOCX) — Phase 7
+    cover-engine/            Cover generation, spine calculator — Phase 8
+    kdp-validator/           Preflight / KDP compliance validation — Phase 9
+  infrastructure/
+    docker/                 Dockerfiles
+    nginx/                  Reverse proxy config
+  docs/                     API / DB / deployment docs
+  scripts/                  One-off / migration scripts
+```
+
+Package manager: **npm workspaces** (matches the `npm run <x>` command
+surface required by the brief; no pnpm/yarn). Root `package.json` declares
+`workspaces: ["apps/*", "packages/*"]`.
+
+Each package/app is an independent TS project with its own `tsconfig.json`
+extending a shared root `tsconfig.base.json`. Cross-package imports use
+package names (`@kdp/shared`, `@kdp/config`, etc.) resolved via npm
+workspace symlinks — not relative `../../` paths across package
+boundaries.
+
+## 2. Backend architecture (`apps/backend`)
+
+Layered, modular-by-feature. No business logic in routes or controllers.
+
+```
+src/
+  server.ts              Process entrypoint: connect Mongo + Redis, listen
+  app.ts                 Express app: middleware pipeline + route mounting
+  common/
+    errors/              AppError hierarchy, error codes, errorHandler middleware
+    middleware/           asyncHandler, validateRequest(zod), requireAuth, requireRole, rateLimiter, requestId
+    logger/                pino logger, redaction rules
+    http/                  ApiResponse<T> envelope helpers
+  db/
+    mongoose.ts           connection bootstrap, index sync
+  queue/
+    redis.ts              ioredis connection factory
+    queues.ts              BullMQ Queue instances per §27 (created Phase 4)
+  modules/
+    auth/                  User model, service, controller, routes, guards
+    projects/               Project model, service, controller, routes
+    dashboard/               aggregate-stats controller
+    ... (one module per domain area, added per phase)
+```
+
+Each module owns: `*.model.ts` (Mongoose schema), `*.service.ts` (business
+logic, DB access), `*.controller.ts` (thin — parse request, call service,
+shape response), `*.routes.ts` (wiring + validation middleware),
+`*.types.ts` (module-local types not shared with frontend), `*.test.ts`.
+
+Controllers never touch `req`/`res` beyond their own file; services never
+import Express types — this keeps services unit-testable without an HTTP
+harness.
+
+### 2.1 Request pipeline
+
+`helmet` → `cors` (allowlist from config) → rate limiter → JSON body
+parser (size-limited) → mongo-sanitize → `requestId` middleware → routes →
+404 handler → centralized `errorHandler`.
+
+### 2.2 Error contract
+
+All thrown `AppError`s are caught by `errorHandler` and serialized as:
+
+```json
+{ "success": false, "error": { "code": "PROJECT_NOT_FOUND", "message": "...", "requestId": "..." } }
+```
+
+Unexpected errors are logged with full stack + requestId server-side and
+returned to the client as a generic `INTERNAL_ERROR` (no stack leakage).
+
+### 2.3 Auth
+
+- Passwords hashed with `bcrypt` (cost 12).
+- **Access token**: JWT, 15 min TTL, signed with `JWT_SECRET`, carried as
+  `Authorization: Bearer <token>`. Payload: `{ sub: userId, role, sid: sessionId }`.
+- **Refresh token**: opaque random 256-bit token, **not** a JWT. Stored
+  server-side as a `Session` document, hashed (sha256) at rest, with
+  `userId`, `expiresAt` (7d), `userAgent`, `ip`, `revokedAt`. Sent to the
+  client as an `httpOnly`, `sameSite=lax`, `secure` (in prod) cookie
+  (`rt`), never exposed to JS. This lets a session be revoked
+  server-side (logout, "log out other devices", admin-forced logout) —
+  a JWT refresh token could not be invalidated without a blocklist, which
+  is exactly what the Session collection already is.
+- Refresh rotates on every use (old session row is marked used/revoked,
+  a new one issued) — mitigates replay of a stolen refresh cookie.
+- `requireAuth` middleware verifies the access token and attaches
+  `req.user = { id, role }`. `requireRole(...roles)` gates admin-only
+  routes.
+
+### 2.4 Multi-tenancy readiness (§48)
+
+Every user-owned collection has a `userId` field now. An `organizationId`
+(nullable) field is reserved on `Project` and `User` from the start so a
+future org/team model doesn't require a migration — it's simply unused
+(`null`) until Phase 11+ builds org management.
+
+## 3. Frontend architecture (`apps/frontend`)
+
+Vite + React 18 + TypeScript. Routing via `react-router-dom`. Server state
+via `@tanstack/react-query` (no separate global store for server data).
+Forms via `react-hook-form` + `zod` resolvers, sharing the same zod
+schemas as the backend where practical (imported from `@kdp/shared`).
+
+```
+src/
+  main.tsx, App.tsx
+  routes/                  route tree, ProtectedRoute wrapper
+  lib/
+    api-client.ts           fetch wrapper: attaches access token, retries once on 401 via /auth/refresh, throws ApiError
+    query-client.ts         React Query client config
+  features/
+    auth/                    LoginPage, RegisterPage, AuthProvider/useAuth
+    dashboard/               DashboardPage, stat cards
+    projects/                ProjectsListPage, ProjectCard, CreateProjectDialog
+    ... (one per domain area, added per phase)
+  components/
+    layout/                  Sidebar, Topbar, AppShell
+    ui/                      shadcn/ui primitives
+  styles/                    Tailwind entry
+```
+
+Access token is kept in memory (React context), **not** localStorage, to
+reduce XSS exfiltration surface; it's re-acquired via the httpOnly refresh
+cookie on page load.
+
+## 4. Data model (Phase 1 subset — extended per phase)
+
+`User { _id, email, passwordHash, name, role: admin|user, organizationId?, createdAt, updatedAt }`
+
+`Session { _id, userId, tokenHash, userAgent, ip, expiresAt, revokedAt? }`
+
+`Project { _id, userId, organizationId?, name, bookType, niche, targetAudience, language, status, workflowStatus, createdAt, updatedAt, archivedAt? }`
+
+Full model list for later phases is enumerated in §41 of the brief and
+will be added incrementally as each phase lands (BookSpecification,
+BookIdea, BookOutline, Chapter, Section, ContentVersion, Research,
+Metadata, Asset, Cover, Template, PromptTemplate, AIUsage, Job,
+ValidationResult, Export, SystemLog).
+
+## 5. Assumptions (ambiguities resolved unilaterally)
+
+- **JWT/session split**: brief asks for "access token, refresh token,
+  session management" without specifying storage — resolved as above
+  (§2.3). This is the standard production-grade pattern and is the most
+  defensible default.
+- **Node/TS build tooling**: `tsx` for dev (fast reload, no separate
+  watch+compile step), `tsc` for production build, `vitest` for tests
+  across all packages (one tool, ESM-native, fast).
+- **Frontend AI actions in Phase 1**: none yet — AI provider work starts
+  Phase 2. Phase 1 ships the shell + auth + projects only, per the
+  brief's own phase ordering.
+- **CSRF**: since the access token travels via `Authorization` header
+  (not a cookie) and only the refresh cookie is `httpOnly`/`sameSite=lax`,
+  classic CSRF (which relies on ambient cookie auth) has no attack
+  surface. `sameSite=lax` is retained as defense in depth.
+- **Rate limiting**: `express-rate-limit` with in-memory store for now;
+  swap for a Redis store note left in code once multi-instance deployment
+  is needed.
+- **Idea generation is synchronous, not a BullMQ job** (Phase 2): the brief's
+  phase ordering puts "Book idea generation" in Phase 2 and BullMQ/job
+  infrastructure in Phase 4. A handful of AI calls for idea generation
+  completes well within a normal HTTP timeout, so it's a plain
+  `async`/`await` service call for now; it should move onto the job queue
+  once Phase 4 introduces one, for consistency with chapter/section
+  generation (which genuinely needs to be a job).
+- **PromptTemplate admin CRUD is read-only for now**: `PromptTemplate` is a
+  real Mongoose-backed model with a seeded default (`BOOK_IDEA_GENERATOR`)
+  and an admin-only `GET /api/prompt-templates`, but create/update/delete
+  routes and an editor UI are deferred to Phase 11 (Admin Panel), where the
+  rest of the admin surface (users, providers, book types, templates,
+  validation rules) is built together rather than piecemeal.
+- **The BullMQ worker runs in-process with the HTTP server** (Phase 4):
+  `startContentGenerationWorker()` is called from the same `server.ts` that
+  starts Express, not a separate process/container. The brief's Docker
+  service list (§37) names `frontend`, `backend`, `mongodb`, `redis`,
+  `nginx` — no separate `worker` service — so this matches the given
+  infrastructure rather than inventing a new deployable. It's also the
+  simplest thing that's still correct at this scale (`JOB_CONCURRENCY`
+  bounds it). Splitting the worker into its own process/container is a
+  legitimate scaling step later, but nothing about the job/queue design
+  assumes in-process — `getContentGenerationQueue()`/`getRedisConnection()`
+  work identically from a separate process.
+- **BullMQ tests need a real Redis, unlike Mongo tests.** Mongo tests use
+  `mongodb-memory-server` (no external dependency); BullMQ's Lua-script-
+  heavy protocol isn't safely mockable the same way (`ioredis-mock` doesn't
+  implement `EVAL` faithfully). Queue-dependent tests
+  (`content-generation.integration.test.ts`) probe Redis reachability and
+  `describe.skipIf` themselves out when it's unavailable, so `npm test`
+  still passes without Redis running — full coverage requires
+  `docker-compose.dev.yml` (or any reachable `REDIS_URL`) to be up. The
+  dependency-free generation logic itself (`runContentGeneration`) has its
+  own unit tests with no such requirement.
+- **`packages/ai` structured output doesn't use the Anthropic SDK's
+  `zodOutputFormat()` helper**: that helper's TypeScript types require zod
+  v4 (`import * as z from 'zod/v4'` inside the SDK), while this monorepo
+  standardizes on zod v3 everywhere else (shared DTOs, backend validation
+  middleware, React Hook Form resolvers) — upgrading the whole repo to zod
+  v4 for one helper wasn't worth the ripple. Instead, `ClaudeAIProvider`
+  builds the JSON Schema itself via `zod-to-json-schema` and passes it as
+  `output_config.format`, then validates the response with the caller's own
+  zod v3 schema — same type safety, no v4 dependency. The OpenAI SDK's
+  `zodResponseFormat()` helper is structurally typed (accepts either zod
+  version) and is used as-is.
+
+## 6. Testing strategy
+
+- **Unit**: services tested directly (no HTTP), AI/Storage/Research
+  providers tested against their mock implementations.
+- **Integration/API**: `supertest` against the Express `app` (not a
+  listening server), backed by `mongodb-memory-server` (real Mongo
+  semantics, no external dependency, works offline/CI).
+- **Queue tests** (from Phase 4): BullMQ against a real Redis (docker) in
+  CI, or `ioredis-mock` for fast local unit tests of job handlers in
+  isolation.
+- AI provider tests never call paid APIs — always the Mock provider.
+
+## 7. Docker
+
+`docker-compose.yml` at repo root brings up `mongo`, `redis`, `backend`,
+`frontend` (built as static assets served by `nginx`), and an `nginx`
+reverse proxy fronting both. Dev workflow uses `npm run dev` (concurrently
+running backend + frontend with hot reload) against a docker-compose
+that runs only `mongo` + `redis` (`docker-compose.dev.yml`).

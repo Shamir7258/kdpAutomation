@@ -1,0 +1,24 @@
+# Local development stack: only the stateful services. Run `npm run dev`
+# at the repo root against these — backend/frontend hot-reload outside Docker.
+name: kdp-automation-dev
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-dev-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-dev-data:/data
+
+volumes:
+  mongo-dev-data:
+  redis-dev-data:
