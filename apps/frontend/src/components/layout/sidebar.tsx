@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   FolderKanban,
   Sparkles,
-  Image,
   ShieldCheck,
   Package,
   Settings,
@@ -11,16 +10,15 @@ import {
 import { cn } from '@/lib/utils';
 
 /**
- * Metadata (Phase 6) and Interior (Phase 7) deliberately have no standalone
- * nav item — like Research/Ideas/Outline/Content/Editor before them, both
- * are project-scoped and live inside the project detail page, not as an
- * account-level page. Cover/Validation/Exports keep their placeholder pages
- * until their phases land the same way.
+ * Metadata (Phase 6), Interior (Phase 7), and Cover (Phase 8) deliberately
+ * have no standalone nav item — like Research/Ideas/Outline/Content/Editor
+ * before them, all are project-scoped and live inside the project detail
+ * page, not as an account-level page. Validation/Exports keep their
+ * placeholder pages until their phases land the same way.
  */
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
-  { to: '/cover', label: 'Cover', icon: Image },
   { to: '/validation', label: 'Validation', icon: ShieldCheck },
   { to: '/exports', label: 'Exports', icon: Package },
   { to: '/settings', label: 'Settings', icon: Settings },

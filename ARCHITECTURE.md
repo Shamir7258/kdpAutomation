@@ -13,7 +13,7 @@ kdp-automation/            (repo root)
     ai/                     AIProvider abstraction (Claude, OpenAI, Mock)
     storage/                 StorageProvider abstraction (Local, S3-compatible)
     document-engine/        Interior generation (PDF/EPUB/DOCX)
-    cover-engine/            Cover generation, spine calculator — Phase 8
+    cover-engine/            Cover generation, spine calculator
     kdp-validator/           Preflight / KDP compliance validation — Phase 9
   infrastructure/
     docker/                 Dockerfiles
@@ -226,6 +226,18 @@ ValidationResult, Export, SystemLog).
   actually satisfies KDP's rules for its specific page count) is Phase 9's
   job (the KDP validator). Phase 7's output should be read as "well-formatted"
   rather than "KDP-certified compliant" until Phase 9 lands.
+- **`packages/cover-engine`'s spine-width calculation uses `BookSpecification`'s
+  *estimated* page count, not any actually-generated interior's real page
+  count** (Phase 8): generating a cover deliberately doesn't require an
+  interior — or even an outline — to exist first, so the two generation flows
+  stay independent, and a cover can be produced as soon as a specification
+  exists. This means the spine width may be off until a real interior is
+  rendered; regenerating the cover once a final page count is known is a
+  lightweight, fast operation (no outline/content required), so the fix is a
+  cheap re-run rather than a blocking dependency. Separately, AI
+  image-generation calls made during cover generation are not recorded in
+  `AIUsage` — that schema's cost model is token-based and doesn't fit
+  per-image pricing, a documented scope limit for this phase.
 
 ## 6. Testing strategy
 

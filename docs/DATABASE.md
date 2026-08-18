@@ -196,6 +196,27 @@ render is generated and stored via the configured `StorageProvider`.
 | `fileSizeBytes` | number | |
 | timestamps | Date | `createdAt`/`updatedAt` |
 
+## `cover` (Phase 8)
+
+One document per **successful** cover render — append-only, regenerating
+never deletes a prior successful render (same philosophy as
+`interior`/`contentversions`/`editpasses`). Written by `runCoverGeneration`
+after both output files are generated and stored via the configured
+`StorageProvider`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `projectId`, `userId` | ObjectId | Scope |
+| `batchId` | string | Groups this render's job/output; also part of its storage keys |
+| `paperType` | `'white' \| 'cream' \| 'color'` | Determines the per-page spine-thickness constant used |
+| `pageCount` | number | From `BookSpecification.estimatedPageCount` (falling back to 100 if zero) — not any actually-generated interior's real page count; see ARCHITECTURE.md §5 |
+| `spineWidthIn` | number | Computed by `calculateSpineWidthInches(pageCount, paperType)` in `@kdp/cover-engine` |
+| `ebookCoverStorageKey` | string | `covers/<userId>/<projectId>/<batchId>-ebook.png` — namespaced per the platform-wide `<category>/<userId>/...` convention that `/api/files/*` relies on for ownership checks |
+| `ebookCoverUrl` | string | Local dev: served via `/api/files/*`. S3: a presigned GET URL (1-hour TTL) |
+| `wrapCoverPdfStorageKey` | string | `covers/<userId>/<projectId>/<batchId>-wrap.pdf` |
+| `wrapCoverPdfUrl` | string | Same URL scheme as `ebookCoverUrl` |
+| timestamps | Date | `createdAt`/`updatedAt` |
+
 ## Migrations
 
 There's no relational schema to migrate yet. `npm run migrate` runs

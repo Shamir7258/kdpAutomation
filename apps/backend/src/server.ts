@@ -7,6 +7,7 @@ import { promptTemplateService } from './modules/prompt-templates/prompt-templat
 import { startContentGenerationWorker, stopContentGenerationWorker } from './queue/workers/content-generation.worker.js';
 import { startEditingWorker, stopEditingWorker } from './queue/workers/editing.worker.js';
 import { startInteriorWorker, stopInteriorWorker } from './queue/workers/interior.worker.js';
+import { startCoverWorker, stopCoverWorker } from './queue/workers/cover.worker.js';
 import { closeQueues } from './queue/queues.js';
 import { closeRedisConnection } from './queue/redis.js';
 
@@ -18,6 +19,7 @@ async function main(): Promise<void> {
     startContentGenerationWorker().waitUntilReady(),
     startEditingWorker().waitUntilReady(),
     startInteriorWorker().waitUntilReady(),
+    startCoverWorker().waitUntilReady(),
   ]);
 
   const app = createApp();
@@ -31,6 +33,7 @@ async function main(): Promise<void> {
       await stopContentGenerationWorker();
       await stopEditingWorker();
       await stopInteriorWorker();
+      await stopCoverWorker();
       await closeQueues();
       await closeRedisConnection();
       process.exit(0);

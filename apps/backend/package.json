@@ -15,6 +15,7 @@
   "dependencies": {
     "@kdp/ai": "0.1.0",
     "@kdp/config": "0.1.0",
+    "@kdp/cover-engine": "0.1.0",
     "@kdp/document-engine": "0.1.0",
     "@kdp/shared": "0.1.0",
     "@kdp/storage": "0.1.0",

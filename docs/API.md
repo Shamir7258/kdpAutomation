@@ -152,6 +152,15 @@ Dev-only proxy for locally stored files — only relevant when `STORAGE_PROVIDER
 |---|---|---|
 | GET | `/files/*` | Serves a file by its storage key. Every key this platform writes is namespaced `<category>/<userId>/...`; the route enforces ownership by checking that segment against the authenticated user (403/404 otherwise) rather than trusting the key alone. Returns 404 if the configured provider isn't `LocalStorageProvider`. |
 
+## Cover generation (Phase 8)
+
+Async, mirrors interior generation — `POST` requires only a `BookSpecification` to exist (no outline or generated content needed), then enqueues a job on the `cover-generation` BullMQ queue and returns `202`; poll `GET .../jobs`. Every successful render creates a new `Cover` document — regenerating never deletes a prior cover (same append-only philosophy as `Interior`/`ContentVersion`/`EditPass`).
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| POST | `/projects/:id/cover` | `{ paperType: 'white' \| 'cream' \| 'color', stylePrompt? }`. Requires a `BookSpecification` to exist (400 otherwise). Spine width is calculated from the specification's `estimatedPageCount` (falling back to 100), not any actually-generated interior's real page count — see ARCHITECTURE.md §5. |
+| GET | `/projects/:id/cover` | `CoverDto[]` — all successful renders for the project, newest first: `{ id, projectId, batchId, paperType, pageCount, spineWidthIn, ebookCoverUrl, wrapCoverPdfUrl, createdAt }`. |
+
 ## Prompt templates (Phase 2, admin-only)
 
 | Method | Path | Notes |

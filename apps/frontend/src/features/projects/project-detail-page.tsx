@@ -14,6 +14,7 @@ import { OutlinePanel } from '@/features/outline/outline-panel';
 import { ContentPanel } from '@/features/content/content-panel';
 import { MetadataPanel } from '@/features/metadata/metadata-panel';
 import { InteriorPanel } from '@/features/interior/interior-panel';
+import { CoverPanel } from '@/features/cover/cover-panel';
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -87,10 +88,12 @@ export function ProjectDetailPage() {
 
       <InteriorPanel projectId={project.id} />
 
+      <CoverPanel projectId={project.id} />
+
       <Card>
         <CardContent className="p-6 text-sm text-muted-foreground">
-          Cover and validation land in upcoming phases (see PLAN.md) — research, book ideas, specification,
-          outline, content generation/editing, metadata, and interior generation are live now.
+          Validation lands in upcoming phases (see PLAN.md) — research, book ideas, specification,
+          outline, content generation/editing, metadata, interior generation, and cover generation are live now.
         </CardContent>
       </Card>
     </div>

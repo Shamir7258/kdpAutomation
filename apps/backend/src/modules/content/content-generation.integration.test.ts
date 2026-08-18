@@ -66,10 +66,13 @@ async function waitForJobStatus(
 
 // This file exercises the real BullMQ queue + worker end-to-end (deliberately — see
 // content.service.test.ts for the dependency-free unit tests of the actual generation logic).
-// On a heavily loaded host it can be flaky: BullMQ's job-pickup latency is sensitive to the
-// Node event loop being starved of CPU, and job status is polled over real HTTP + Mongo, not
-// mocked. Verified reliably green (3/3, ~24s) run in isolation on an idle host; the generous
-// per-test timeouts below are headroom for a busy host, not a sign the mechanism is slow.
+// This used to be intermittently flaky and was attributed to host contention (BullMQ job-pickup
+// latency under a starved event loop) — the real cause, found and fixed in Phase 8, was a race in
+// enqueueOne() (content.service.ts): the job could be enqueued and picked up by the worker before
+// its Mongo Job doc existed, so the "completed" status write silently found nothing to update.
+// Fixed by creating the Job doc before enqueueing and passing its id as BullMQ's explicit jobId,
+// making the ordering race-proof. The generous per-test timeouts below are now just headroom for
+// a busy host, not compensation for that bug.
 describe.skipIf(!redisUp)('Content generation (full BullMQ round trip — requires Redis)', () => {
   beforeAll(async () => {
     await startTestDb();

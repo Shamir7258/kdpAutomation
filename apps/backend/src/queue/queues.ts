@@ -27,6 +27,14 @@ export interface InteriorGenerationJobData {
   batchId: string;
 }
 
+export interface CoverGenerationJobData {
+  projectId: string;
+  userId: string;
+  paperType: 'white' | 'cream' | 'color';
+  stylePrompt?: string;
+  batchId: string;
+}
+
 const DEFAULT_JOB_OPTIONS = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
@@ -37,6 +45,7 @@ const DEFAULT_JOB_OPTIONS = {
 let contentGenerationQueue: Queue<ContentGenerationJobData> | undefined;
 let editingQueue: Queue<EditingPipelineJobData> | undefined;
 let interiorGenerationQueue: Queue<InteriorGenerationJobData> | undefined;
+let coverGenerationQueue: Queue<CoverGenerationJobData> | undefined;
 
 /** Lazily constructed so it always binds to the current Redis connection (matters for tests, which may reconfigure REDIS_URL). */
 export function getContentGenerationQueue(): Queue<ContentGenerationJobData> {
@@ -72,6 +81,19 @@ export function getInteriorGenerationQueue(): Queue<InteriorGenerationJobData> {
   return interiorGenerationQueue;
 }
 
+/** Cover generation (front-cover art + eBook cover + print wrap PDF) — genuinely long-running
+ *  (image generation + compositing), so it goes through the same job queue pattern as interior
+ *  generation. */
+export function getCoverGenerationQueue(): Queue<CoverGenerationJobData> {
+  if (!coverGenerationQueue) {
+    coverGenerationQueue = new Queue<CoverGenerationJobData>(QUEUE_NAMES.COVER_GENERATION, {
+      connection: getRedisConnection(),
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+    });
+  }
+  return coverGenerationQueue;
+}
+
 export async function closeQueues(): Promise<void> {
   if (contentGenerationQueue) {
     await contentGenerationQueue.close();
@@ -84,5 +106,9 @@ export async function closeQueues(): Promise<void> {
   if (interiorGenerationQueue) {
     await interiorGenerationQueue.close();
     interiorGenerationQueue = undefined;
+  }
+  if (coverGenerationQueue) {
+    await coverGenerationQueue.close();
+    coverGenerationQueue = undefined;
   }
 }

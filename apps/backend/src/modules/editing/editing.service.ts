@@ -73,16 +73,20 @@ export const editingService = {
 
     const batchId = randomUUID();
     const data: EditingPipelineJobData = { userId, projectId, chapterId, sectionId, batchId };
-    const bullJob = await getEditingQueue().add('run-editing-pipeline', data);
+    // Create the Job doc *before* enqueueing — see the comment in content.service.ts's
+    // enqueueOne for why (a fast worker can otherwise finish before the doc it's looking for
+    // even exists, leaving it stuck "pending" forever).
+    const bullJobId = randomUUID();
     const jobDoc = await jobService.createPending({
       queueName: QUEUE_NAMES.EDITING,
-      bullJobId: bullJob.id ?? randomUUID(),
+      bullJobId,
       batchId,
       projectId,
       userId,
       chapterId,
       sectionId,
     });
+    await getEditingQueue().add('run-editing-pipeline', data, { jobId: bullJobId });
     return jobService.toDto(jobDoc);
   },
 

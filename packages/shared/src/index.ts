@@ -15,3 +15,4 @@ export * from './ai-assistant.schemas.js';
 export * from './manual-edit.schemas.js';
 export * from './metadata.schemas.js';
 export * from './interior.schemas.js';
+export * from './cover.schemas.js';

@@ -84,14 +84,19 @@ export const interiorService = {
 
     const batchId = randomUUID();
     const data: InteriorGenerationJobData = { userId, projectId, format: input.format, trimSizeId, batchId };
-    const bullJob = await getInteriorGenerationQueue().add('generate-interior', data);
+    // Create the Job doc *before* enqueueing — see the comment in content.service.ts's
+    // enqueueOne for why (a fast worker can otherwise finish before the doc it's looking for
+    // even exists, leaving it stuck "pending" forever — interior/cover rendering is fast enough
+    // with the mock providers that this raced reliably until fixed).
+    const bullJobId = randomUUID();
     const jobDoc = await jobService.createPending({
       queueName: QUEUE_NAMES.DOCUMENT_GENERATION,
-      bullJobId: bullJob.id ?? randomUUID(),
+      bullJobId,
       batchId,
       projectId,
       userId,
     });
+    await getInteriorGenerationQueue().add('generate-interior', data, { jobId: bullJobId });
 
     return jobService.toDto(jobDoc);
   },

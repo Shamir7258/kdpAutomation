@@ -24,6 +24,7 @@ import { ContentVersionModel } from '../modules/content-versions/content-version
 import { EditPassModel } from '../modules/editing/edit-pass.model.js';
 import { MetadataModel } from '../modules/metadata/metadata.model.js';
 import { InteriorModel } from '../modules/interior/interior.model.js';
+import { CoverModel } from '../modules/cover/cover.model.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
@@ -43,6 +44,7 @@ async function main(): Promise<void> {
     EditPassModel,
     MetadataModel,
     InteriorModel,
+    CoverModel,
   ]) {
     await model.syncIndexes();
     logger.info({ model: model.modelName }, 'indexes synced');

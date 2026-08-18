@@ -6,3 +6,7 @@ export { MockAIProvider } from './providers/mock-provider.js';
 export { ClaudeAIProvider, type ClaudeProviderConfig } from './providers/claude-provider.js';
 export { OpenAIAIProvider, type OpenAIProviderConfig } from './providers/openai-provider.js';
 export { createAIProvider } from './factory.js';
+export type { ImageProvider, ImageGenerateOptions, GeneratedImage } from './image-types.js';
+export { MockImageProvider } from './providers/mock-image-provider.js';
+export { OpenAIImageProvider, type OpenAIImageProviderConfig } from './providers/openai-image-provider.js';
+export { createImageProvider } from './image-factory.js';

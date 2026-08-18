@@ -29,16 +29,21 @@ async function enqueueOne(
   batchId: string,
 ): Promise<JobDto> {
   const data: ContentGenerationJobData = { userId, projectId, chapterId, sectionId, batchId };
-  const bullJob = await getContentGenerationQueue().add('generate-section', data);
+  // The Job doc must exist in Mongo *before* the BullMQ job can possibly be picked up, or a fast
+  // worker can finish (and try to mark the job completed) before the doc it's looking for has
+  // even been created — leaving it stuck "pending" forever. Pre-generating the id and creating
+  // the doc first, then passing that same id as BullMQ's jobId, makes the ordering race-proof.
+  const bullJobId = randomUUID();
   const jobDoc = await jobService.createPending({
     queueName: QUEUE_NAMES.CONTENT_GENERATION,
-    bullJobId: bullJob.id ?? randomUUID(),
+    bullJobId,
     batchId,
     projectId,
     userId,
     chapterId,
     sectionId,
   });
+  await getContentGenerationQueue().add('generate-section', data, { jobId: bullJobId });
   return jobService.toDto(jobDoc);
 }
 

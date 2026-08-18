@@ -30,7 +30,6 @@ export default function App() {
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/projects" element={<ProjectsListPage />} />
                 <Route path="/projects/:id" element={<ProjectDetailPage />} />
-                <Route path="/cover" element={<ComingSoonPage title="Cover" phase="Phase 8" />} />
                 <Route path="/validation" element={<ComingSoonPage title="Validation" phase="Phase 9" />} />
                 <Route path="/exports" element={<ComingSoonPage title="Exports" phase="Phase 10" />} />
                 <Route path="/settings" element={<SettingsPage />} />
