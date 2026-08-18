@@ -62,10 +62,19 @@ See PLAN.md for phase-level roadmap. This file tracks granular in-flight tasks.
 - [x] Live Playwright walkthrough (project → ideas → spec → outline → generate section content → generate-all-content correctly skips the already-done section). **Found and fixed a real bug**: `SectionContentRow`'s own content query had no invalidation trigger when its job finished — the "completed" badge would show while the button still said "Generate" (stale) instead of "Regenerate" with the new content, until something unrelated triggered a refetch. Fixed with a `useEffect` that invalidates that section's content query the moment its job first reaches `'completed'`.
 - [~] `content-generation.integration.test.ts`'s last test (`restore an earlier version`) is occasionally flaky on this specific dev machine under heavy concurrent desktop load (Chrome/VS Code contention, observed load average >3.5) — diagnosed thoroughly: the generation logic itself is proven correct via dependency-free unit tests that always pass, and the full file passes reliably (3/3, ~24s) in isolation on an idle host. Not a code defect; documented in the test file. `fileParallelism: false` was also added to `vitest.config.ts` to reduce a related (and real) source of contention — ~10 test files each spinning up their own `mongodb-memory-server` concurrently.
 
-## Next up (Phase 5 kickoff)
-- [ ] Rich text editor (Tiptap) for manual content editing — first real producer of `ContentVersion.source = 'manual_edit'`
-- [ ] AI editing pipeline (grammar → clarity → consistency → structure → fact-checking → AI-detection-risk review → final review), §15
-- [ ] Contextual AI assistant panel operating on editor selection
+## Phase 5 — Editor, AI assistant
+- [x] `packages/shared`: `edit-pass.schemas.ts` (7 `EDIT_PASS_TYPES`), `ai-assistant.schemas.ts` (11 `ASSISTANT_ACTIONS` + request/result types), `manual-edit.schemas.ts`
+- [x] Backend: `EditPass` model, `editing.service.ts` (`runEditingPipeline` standalone-testable + BullMQ wrapper), `editing.worker.ts` (mirrors `content-generation.worker.ts`), new `editing` queue in `queue/queues.ts`
+- [x] Backend: `ai-assistant.service.ts` — selection-or-current-content resolution, per-action instruction table, `alternatives`/`fact_check` via structured/analysis provider calls
+- [x] Backend: `content.service.saveManualEdit()` + `PUT .../sections/:sectionId/manual` route — always creates a new `ContentVersion` with `source: 'manual_edit'`
+- [x] `server.ts` starts both workers via `Promise.all([...].waitUntilReady())`; `sync-indexes.ts` includes `EditPass`
+- [x] Backend tests: 15 new (ai-assistant 7, manual-edit 3, editing-pipeline unit 2, editing-pipeline BullMQ round trip 3)
+- [x] Frontend: `tiptap-editor.tsx`, `editor-toolbar.tsx`, `ai-assistant-panel.tsx`, `versions-panel.tsx`, `edit-passes-panel.tsx`, `section-navigator.tsx`, `book-editor-page.tsx` — full-screen route `/projects/:id/editor/:chapterId/:sectionId`, deliberately outside `AppShell`
+- [x] "Edit" link added to `SectionContentRow` in the Content panel, routing into the editor
+- [x] Live Playwright walkthrough — **found and fixed two real bugs**:
+  1. `TiptapEditor`'s content-resync `useEffect` called `editor.commands.setContent(content)` (default `emitUpdate: true`) whenever the `content` prop changed — including the very first time AI-generated content loaded asynchronously after the editor had already mounted empty. That fired `onUpdate` as if the user had typed, marking the section dirty ("unsaved changes" badge) on load, before any real edit. Fixed by passing `{ emitUpdate: false }` — this is a genuine Tiptap v3 API (`SetContentOptions.emitUpdate`, default `true`), not a workaround.
+  2. `EditPassesPanel`'s `passesQuery` had no invalidation trigger when the editing-pipeline job finished — unlike `SectionContentRow`/`BookEditorPage`, nothing refetched it after `jobsQuery` observed `status: 'completed'`. With the mock provider (job completes in tens of milliseconds), the panel would sit on "No editing pipeline runs yet." indefinitely even though all 7 passes existed server-side. Fixed with the same `useRef`-tracked status-transition `useEffect` pattern already used elsewhere in this codebase (see Phase 4's `SectionContentRow` fix above).
+- [x] `docs/API.md` / `docs/DATABASE.md` updated for Phase 5 endpoints/models
 
 ## Notes / follow-ups
 - Frontend has no component/unit tests yet (`npm run test -w @kdp/frontend`

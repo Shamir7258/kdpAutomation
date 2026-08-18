@@ -21,6 +21,7 @@ import { ChapterModel } from '../modules/outline/chapter.model.js';
 import { SectionModel } from '../modules/outline/section.model.js';
 import { JobModel } from '../modules/jobs/job.model.js';
 import { ContentVersionModel } from '../modules/content-versions/content-version.model.js';
+import { EditPassModel } from '../modules/editing/edit-pass.model.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
@@ -37,6 +38,7 @@ async function main(): Promise<void> {
     SectionModel,
     JobModel,
     ContentVersionModel,
+    EditPassModel,
   ]) {
     await model.syncIndexes();
     logger.info({ model: model.modelName }, 'indexes synced');

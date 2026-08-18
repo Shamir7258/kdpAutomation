@@ -65,9 +65,13 @@ vertical slice (backend + frontend + tests) before moving to the next.
   - [x] Backend tests: dependency-free unit test of the actual generation logic (`content.service.test.ts`, no Redis) + a full BullMQ round-trip integration suite (enqueue → worker → ContentVersion → restore) gated on Redis being reachable
   - [x] Frontend Content panel (per-section generate/regenerate, live job-status polling, version count) verified via live Playwright walkthrough; a real bug found and fixed during that walkthrough — see TODO.md
 
-- [ ] **Phase 5 — Editor, AI assistant**
-  - [ ] Rich text editor (Tiptap) with AI rewrite/expand/shorten/improve actions
-  - [ ] Contextual AI assistant panel
+- [x] **Phase 5 — Editor, AI assistant**
+  - [x] Full-screen focused editor (`/projects/:id/editor/:chapterId/:sectionId`, outside `AppShell` chrome) — Tiptap v3 rich text editor with Markdown as the storage format throughout (`tiptap-markdown`); toolbar (bold/italic/strike/code, headings, lists, blockquote, table, page-break stand-in, undo/redo); section navigator sidebar; manual save (`PUT .../manual`, always creates a new `ContentVersion`) alongside the existing AI regenerate action
+  - [x] AI assistant panel — operates on the live editor selection or falls back to the section's current content; actions: rewrite, simplify, age-appropriate, alternatives (structured output, pick one to insert), expand, shorten, improve, exercises, questions, fact-check (analysis with findings), custom instruction. `AIProvider.editContent`/`generateStructuredData`/`analyzeContent` reused — no new provider methods needed
+  - [x] Editing pipeline — new `editing` BullMQ queue/worker (mirrors `content-generation`), runs 7 independent passes (grammar, clarity, consistency, structure, fact-checking, ai-detection-risk, final-review) per run, each stored as its own `EditPass` document (never overwritten); `ai_detection_risk` pass is framed explicitly as an editorial-quality heuristic, not a detector-evasion claim (§ legal/ethical constraint from the brief)
+  - [x] Versions panel — lists all `ContentVersion`s for a section with current-badge and restore-without-delete
+  - [x] Backend tests: AI assistant (auth/validation/selection-fallback/alternatives/fact-check — 7 tests), manual-edit versioning (3 tests), editing-pipeline unit logic (2 tests, no Redis), editing-pipeline BullMQ round trip (3 tests, gated on Redis) — 15 new tests, all via `MockAIProvider`
+  - [x] Frontend verified via live Playwright walkthrough (register → project → research → ideas → spec → outline → generate content → open editor → type → save → AI rewrite → insert → versions tab → run editing pipeline → passes rendered). Found and fixed two real bugs during that walkthrough — see TODO.md
 
 - [ ] **Phase 6 — Metadata generator**
 

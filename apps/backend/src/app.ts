@@ -17,6 +17,8 @@ import { researchRouter } from './modules/research/research.routes.js';
 import { outlineRouter } from './modules/outline/outline.routes.js';
 import { contentRouter } from './modules/content/content.routes.js';
 import { jobRouter } from './modules/jobs/job.routes.js';
+import { aiAssistantRouter } from './modules/ai-assistant/ai-assistant.routes.js';
+import { editingRouter } from './modules/editing/editing.routes.js';
 
 export function createApp(): Express {
   const config = loadConfig();
@@ -43,6 +45,8 @@ export function createApp(): Express {
   app.use('/api/projects/:id/outline', outlineRouter);
   app.use('/api/projects/:id/content', contentRouter);
   app.use('/api/projects/:id/jobs', jobRouter);
+  app.use('/api/projects/:id/chapters/:chapterId/sections/:sectionId/assistant', aiAssistantRouter);
+  app.use('/api/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes', editingRouter);
   app.use('/api/dashboard', dashboardRouter);
   app.use('/api/prompt-templates', promptTemplateRouter);
 

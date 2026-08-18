@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import type { SaveManualEditInput } from '@kdp/shared';
 import { ok } from '../../common/http/respond.js';
 import { contentService } from './content.service.js';
 import { contentVersionService } from '../content-versions/content-version.service.js';
@@ -35,6 +36,15 @@ export const contentController = {
     ok(
       res,
       await contentVersionService.restore(req.user!.id, req.params.id!, req.params.chapterId!, req.params.sectionId!, versionNumber),
+    );
+  },
+
+  async saveManualEdit(req: Request, res: Response): Promise<void> {
+    const { content } = req.body as SaveManualEditInput;
+    ok(
+      res,
+      await contentService.saveManualEdit(req.user!.id, req.params.id!, req.params.chapterId!, req.params.sectionId!, content),
+      201,
     );
   },
 };

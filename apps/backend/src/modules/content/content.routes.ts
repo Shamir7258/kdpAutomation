@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { saveManualEditSchema } from '@kdp/shared';
 import { asyncHandler } from '../../common/middleware/async-handler.js';
 import { validate } from '../../common/middleware/validate.js';
 import { requireAuth } from '../auth/auth.guard.js';
@@ -24,4 +25,9 @@ contentRouter.get('/chapters/:chapterId/sections/:sectionId/versions', asyncHand
 contentRouter.post(
   '/chapters/:chapterId/sections/:sectionId/versions/:versionNumber/restore',
   asyncHandler(contentController.restoreVersion),
+);
+contentRouter.put(
+  '/chapters/:chapterId/sections/:sectionId/manual',
+  validate(saveManualEditSchema),
+  asyncHandler(contentController.saveManualEdit),
 );

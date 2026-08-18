@@ -5,6 +5,7 @@ import { connectDatabase } from './db/mongoose.js';
 import { logger } from './common/logger/logger.js';
 import { promptTemplateService } from './modules/prompt-templates/prompt-template.service.js';
 import { startContentGenerationWorker, stopContentGenerationWorker } from './queue/workers/content-generation.worker.js';
+import { startEditingWorker, stopEditingWorker } from './queue/workers/editing.worker.js';
 import { closeQueues } from './queue/queues.js';
 import { closeRedisConnection } from './queue/redis.js';
 
@@ -12,7 +13,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
   await connectDatabase();
   await promptTemplateService.seedDefaults();
-  await startContentGenerationWorker().waitUntilReady();
+  await Promise.all([startContentGenerationWorker().waitUntilReady(), startEditingWorker().waitUntilReady()]);
 
   const app = createApp();
   const server = app.listen(config.PORT, () => {
@@ -23,6 +24,7 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'shutting down');
     server.close(async () => {
       await stopContentGenerationWorker();
+      await stopEditingWorker();
       await closeQueues();
       await closeRedisConnection();
       process.exit(0);

@@ -139,7 +139,23 @@ version is "live"; restoring an older version just moves that pointer.
 | `sectionId`, `chapterId`, `projectId` | ObjectId | |
 | `versionNumber` | number | 1-indexed per section |
 | `content` | string | The generated (or, from Phase 5, manually edited) text |
-| `source` | `'ai_generated' \| 'manual_edit'` | Only `ai_generated` is produced today |
+| `source` | `'ai_generated' \| 'manual_edit'` | `manual_edit` is now produced by the Phase 5 editor's Save action |
+
+## `editpasses` (Phase 5)
+
+One document per pass per pipeline run — never overwritten, so every run's full
+history is retained (same append-only philosophy as `contentversions`).
+`{sectionId, batchId}` groups the 7 passes of a single run; the frontend
+filters to the newest `batchId` to show "the latest run's results" while
+older runs stay queryable.
+
+| Field | Type | Notes |
+|---|---|---|
+| `sectionId`, `chapterId`, `projectId`, `userId` | ObjectId | Scope |
+| `passType` | `'grammar' \| 'clarity' \| 'consistency' \| 'structure' \| 'fact_checking' \| 'ai_detection_risk' \| 'final_review'` | One of 7 fixed pass types run together per pipeline invocation |
+| `batchId` | string | Shared by all 7 passes from one `POST .../edit-passes` call |
+| `summary` | string | AI-generated overview for this pass |
+| `findings[]` | `{ type, description, severity: 'low'\|'medium'\|'high', location? }` | Zero or more specific issues found by this pass |
 
 ## Migrations
 

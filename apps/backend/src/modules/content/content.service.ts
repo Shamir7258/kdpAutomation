@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { JobDto } from '@kdp/shared';
+import type { ContentVersionDto, JobDto } from '@kdp/shared';
 import { AppError } from '../../common/errors/app-error.js';
 import { getAIProvider } from '../ai/ai-provider.instance.js';
 import { aiUsageService } from '../ai-usage/ai-usage.service.js';
@@ -76,6 +76,22 @@ export const contentService = {
   async listJobs(userId: string, projectId: string): Promise<JobDto[]> {
     await projectService.getById(userId, projectId);
     return jobService.listForProject(userId, projectId);
+  },
+
+  /** The editor's "Save" action (§34) — appends a new version, never overwrites (§14). */
+  async saveManualEdit(
+    userId: string,
+    projectId: string,
+    chapterId: string,
+    sectionId: string,
+    content: string,
+  ): Promise<ContentVersionDto> {
+    await findOwnedChapter(userId, projectId, chapterId);
+    const section = await SectionModel.findOne({ _id: sectionId, chapterId, projectId, userId });
+    if (!section) {
+      throw AppError.notFound('Section not found.');
+    }
+    return contentVersionService.createVersion({ userId, projectId, chapterId, sectionId, content, source: 'manual_edit' });
   },
 };
 

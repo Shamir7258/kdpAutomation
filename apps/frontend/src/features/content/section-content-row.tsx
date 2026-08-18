@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sparkles } from 'lucide-react';
+import { Pencil, Sparkles } from 'lucide-react';
 import type { JobDto, SectionContentDto, SectionDto } from '@kdp/shared';
 import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,12 @@ export function SectionContentRow({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {activeJob && <Badge variant={JOB_BADGE_VARIANT[activeJob.status] ?? 'secondary'}>{activeJob.status}</Badge>}
+          <Button size="sm" variant="outline" asChild>
+            <Link to={`/projects/${projectId}/editor/${chapterId}/${section.id}`}>
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Link>
+          </Button>
           <Button
             size="sm"
             variant={hasContent ? 'outline' : 'default'}

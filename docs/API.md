@@ -102,6 +102,29 @@ All routes are async — a `POST` enqueues a BullMQ job and returns `202` immedi
 | POST | `/projects/:id/content/chapters/:chapterId/sections/:sectionId/versions/:versionNumber/restore` | Moves the "current" pointer to an older version — doesn't delete the newer one. |
 | GET | `/projects/:id/jobs` | All jobs for the project, newest first — used for progress polling. |
 
+## Manual editing (Phase 5)
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| PUT | `/projects/:id/content/chapters/:chapterId/sections/:sectionId/manual` | `{ content }` (1–200,000 chars). Always creates a new `ContentVersion` with `source: 'manual_edit'` — same versioning/restore semantics as AI-generated content, never overwrites. |
+
+## AI assistant (Phase 5)
+
+Operates on the section's live editor selection when provided, otherwise falls back to the section's current saved content. No background job — synchronous, single AI call per request, recorded in `AIUsage`.
+
+| Method | Path | Body |
+|---|---|---|
+| POST | `/projects/:id/chapters/:chapterId/sections/:sectionId/assistant` | `{ action, selectedText?, instruction?, ageRange?, count? }`. `action` ∈ `rewrite \| simplify \| age_appropriate \| alternatives \| expand \| shorten \| improve \| exercises \| questions \| fact_check \| custom`. `instruction` required for `custom`; `ageRange` required for `age_appropriate`. Response is one of `{ kind: 'text', text }`, `{ kind: 'alternatives', alternatives: string[] }`, `{ kind: 'analysis', summary, findings }` depending on the action. |
+
+## Editing pipeline (Phase 5)
+
+Async, mirrors content generation — `POST` enqueues a job on the `editing` BullMQ queue and returns `202`; poll `GET .../jobs`. Runs all 7 passes per invocation as one batch (shared `batchId`), each pass stored as its own `EditPass` document — never overwritten, so every pipeline run's full history is retained.
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes` | Enqueues a 7-pass run: grammar, clarity, consistency, structure, fact_checking, ai_detection_risk, final_review. The `ai_detection_risk` pass is an editorial-quality heuristic (repetitive/generic phrasing) — it makes no claim about evading or bypassing any AI-detection tool. |
+| GET | `/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes` | All passes across all runs, newest first. Filter client-side by `batchId` to show one run's results (the frontend panel shows the latest batch). |
+
 ## Prompt templates (Phase 2, admin-only)
 
 | Method | Path | Notes |

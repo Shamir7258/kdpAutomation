@@ -10,3 +10,6 @@ export * from './research.schemas.js';
 export * from './outline.schemas.js';
 export * from './job.schemas.js';
 export * from './content-version.schemas.js';
+export * from './edit-pass.schemas.js';
+export * from './ai-assistant.schemas.js';
+export * from './manual-edit.schemas.js';
