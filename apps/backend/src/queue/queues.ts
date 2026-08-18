@@ -19,6 +19,14 @@ export interface EditingPipelineJobData {
   batchId: string;
 }
 
+export interface InteriorGenerationJobData {
+  projectId: string;
+  userId: string;
+  format: 'pdf' | 'epub' | 'docx';
+  trimSizeId: string;
+  batchId: string;
+}
+
 const DEFAULT_JOB_OPTIONS = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
@@ -28,6 +36,7 @@ const DEFAULT_JOB_OPTIONS = {
 
 let contentGenerationQueue: Queue<ContentGenerationJobData> | undefined;
 let editingQueue: Queue<EditingPipelineJobData> | undefined;
+let interiorGenerationQueue: Queue<InteriorGenerationJobData> | undefined;
 
 /** Lazily constructed so it always binds to the current Redis connection (matters for tests, which may reconfigure REDIS_URL). */
 export function getContentGenerationQueue(): Queue<ContentGenerationJobData> {
@@ -51,6 +60,18 @@ export function getEditingQueue(): Queue<EditingPipelineJobData> {
   return editingQueue;
 }
 
+/** Interior generation (PDF/EPUB/DOCX rendering) — genuinely long-running for a full book, so it
+ *  goes through the same job queue pattern as content generation and the editing pipeline. */
+export function getInteriorGenerationQueue(): Queue<InteriorGenerationJobData> {
+  if (!interiorGenerationQueue) {
+    interiorGenerationQueue = new Queue<InteriorGenerationJobData>(QUEUE_NAMES.DOCUMENT_GENERATION, {
+      connection: getRedisConnection(),
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+    });
+  }
+  return interiorGenerationQueue;
+}
+
 export async function closeQueues(): Promise<void> {
   if (contentGenerationQueue) {
     await contentGenerationQueue.close();
@@ -59,5 +80,9 @@ export async function closeQueues(): Promise<void> {
   if (editingQueue) {
     await editingQueue.close();
     editingQueue = undefined;
+  }
+  if (interiorGenerationQueue) {
+    await interiorGenerationQueue.close();
+    interiorGenerationQueue = undefined;
   }
 }

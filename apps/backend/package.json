@@ -15,7 +15,9 @@
   "dependencies": {
     "@kdp/ai": "0.1.0",
     "@kdp/config": "0.1.0",
+    "@kdp/document-engine": "0.1.0",
     "@kdp/shared": "0.1.0",
+    "@kdp/storage": "0.1.0",
     "bcrypt": "^5.1.1",
     "bullmq": "^5.12.9",
     "cookie-parser": "^1.4.6",

@@ -178,6 +178,24 @@ them seeing the new suggestions first.
 | `pricing` | `{ currency, listPrice }?` | Manual only — never AI-generated (no sales/pricing-performance claims) |
 | `aiSuggestions` | `{ titles[], subtitles[], description, keywords[], categories[] }` | Raw output of the last `generateMetadata` call, kept for reference even after the human edits the fields above |
 
+## `interior` (Phase 7)
+
+One document per **successful** interior render — append-only, regenerating
+never deletes a prior successful download (same philosophy as
+`contentversions`/`editpasses`). Written by `runInteriorGeneration` after the
+render is generated and stored via the configured `StorageProvider`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `projectId`, `userId` | ObjectId | Scope |
+| `batchId` | string | Groups this render's job/output; also part of its storage key |
+| `format` | `'pdf' \| 'epub' \| 'docx'` | |
+| `trimSizeId` | string | KDP trim size used for PDF/DOCX (e.g. `6x9`); intentionally unused by the EPUB renderer, which is reflowable, but still recorded for reference |
+| `storageKey` | string | `interiors/<userId>/<projectId>/<batchId>.<ext>` — namespaced per the platform-wide `<category>/<userId>/...` convention that `/api/files/*` relies on for ownership checks |
+| `url` | string | Local dev: served via `/api/files/*`. S3: a presigned GET URL (1-hour TTL) |
+| `fileSizeBytes` | number | |
+| timestamps | Date | `createdAt`/`updatedAt` |
+
 ## Migrations
 
 There's no relational schema to migrate yet. `npm run migrate` runs

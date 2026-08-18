@@ -100,3 +100,33 @@ export const api = {
   patch: <T>(path: string, body?: unknown) => apiFetch<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: 'DELETE' }),
 };
+
+/**
+ * Triggers a browser download for a file URL returned by the API. A plain `<a href>` doesn't work
+ * for our own `/api/files/...` routes — the access token lives in memory (not a cookie, see the
+ * comment above `accessToken` further up this file), so a bare anchor navigation sends no
+ * Authorization header and 401s. Absolute URLs (S3 presigned links) need no such header and are
+ * authorized by their own signature, so those are opened directly instead of fetched as a blob.
+ */
+export async function downloadFile(url: string, suggestedName: string): Promise<void> {
+  if (!url.startsWith('/')) {
+    window.open(url, '_blank');
+    return;
+  }
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, (await res.json()) as ApiFailure);
+  }
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = suggestedName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}

@@ -12,7 +12,7 @@ kdp-automation/            (repo root)
     config/                 Strongly typed env configuration (zod-validated)
     ai/                     AIProvider abstraction (Claude, OpenAI, Mock)
     storage/                 StorageProvider abstraction (Local, S3-compatible)
-    document-engine/        Interior generation (PDF/EPUB/DOCX) — Phase 7
+    document-engine/        Interior generation (PDF/EPUB/DOCX)
     cover-engine/            Cover generation, spine calculator — Phase 8
     kdp-validator/           Preflight / KDP compliance validation — Phase 9
   infrastructure/
@@ -216,6 +216,16 @@ ValidationResult, Export, SystemLog).
   zod v3 schema — same type safety, no v4 dependency. The OpenAI SDK's
   `zodResponseFormat()` helper is structurally typed (accepts either zod
   version) and is used as-is.
+- **`packages/document-engine` uses one fixed 0.75" margin, not KDP's real
+  page-count-dependent preflight rules** (Phase 7): KDP's actual margin/gutter
+  and bleed requirements scale with a book's final page count, which isn't
+  knowable until a manuscript is fully rendered — checking it is a validation
+  concern, not a rendering one. Phase 7's renderers apply one conservative
+  fixed margin so output is well-formatted and print-safe by construction;
+  the page-count-dependent compliance check (verifying a given render
+  actually satisfies KDP's rules for its specific page count) is Phase 9's
+  job (the KDP validator). Phase 7's output should be read as "well-formatted"
+  rather than "KDP-certified compliant" until Phase 9 lands.
 
 ## 6. Testing strategy
 

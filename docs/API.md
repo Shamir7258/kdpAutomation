@@ -135,6 +135,23 @@ One canonical metadata doc per project. `POST` (re)generates AI suggestions and 
 | GET | `/projects/:id/metadata` | 404 if not generated yet. |
 | PATCH | `/projects/:id/metadata` | All fields optional: `title`, `subtitle`, `seriesName`, `seriesNumber`, `description` (≤4000 chars), `keywords` (≤7, ≤50 chars each — real KDP limits), `categories` (≤10, free text — not validated against a live/scraped Amazon taxonomy, §7), `authorName`, `primaryMarketplace`, `pricing: { currency, listPrice }` (manual only — the AI never suggests a price). |
 
+## Interior generation (Phase 7)
+
+Async, mirrors content generation — `POST` validates the project has an outline and generated content, then enqueues a job on the `document-generation` BullMQ queue and returns `202`; poll `GET .../jobs`. Every successful render creates a new `Interior` document — regenerating never deletes a prior download (same append-only philosophy as `ContentVersion`/`EditPass`).
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| POST | `/projects/:id/interior` | `{ format: 'pdf' \| 'epub' \| 'docx', trimSizeId? }`. Requires an outline (≥1 chapter) and generated content (≥1 section with a current version) to exist first (400 otherwise). `trimSizeId` defaults to the project's `BookSpecification.trimSizeId` (falling back to `'6x9'`) when omitted. |
+| GET | `/projects/:id/interior` | `InteriorDto[]` — all successful renders for the project, newest first: `{ id, projectId, batchId, format, trimSizeId, url, fileSizeBytes, createdAt }`. |
+
+## Files (Phase 7)
+
+Dev-only proxy for locally stored files — only relevant when `STORAGE_PROVIDER=local`. Under `s3`, `Interior.url` is a presigned S3 URL pointing directly at the object store, and this route returns 404 for it instead of proxying.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/files/*` | Serves a file by its storage key. Every key this platform writes is namespaced `<category>/<userId>/...`; the route enforces ownership by checking that segment against the authenticated user (403/404 otherwise) rather than trusting the key alone. Returns 404 if the configured provider isn't `LocalStorageProvider`. |
+
 ## Prompt templates (Phase 2, admin-only)
 
 | Method | Path | Notes |

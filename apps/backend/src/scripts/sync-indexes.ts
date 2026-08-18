@@ -23,6 +23,7 @@ import { JobModel } from '../modules/jobs/job.model.js';
 import { ContentVersionModel } from '../modules/content-versions/content-version.model.js';
 import { EditPassModel } from '../modules/editing/edit-pass.model.js';
 import { MetadataModel } from '../modules/metadata/metadata.model.js';
+import { InteriorModel } from '../modules/interior/interior.model.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
     ContentVersionModel,
     EditPassModel,
     MetadataModel,
+    InteriorModel,
   ]) {
     await model.syncIndexes();
     logger.info({ model: model.modelName }, 'indexes synced');

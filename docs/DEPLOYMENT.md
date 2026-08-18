@@ -40,10 +40,16 @@ only ever talks to one origin. Stop with `npm run docker:down`.
   is per-process — fine for a single backend instance, needs a Redis
   store before scaling to multiple instances (already flagged in
   ARCHITECTURE.md §5 / TODO.md).
-- `STORAGE_PROVIDER=local` writes under `STORAGE_LOCAL_ROOT`; switch to
-  `s3` with real AWS credentials before deploying anywhere without a
-  persistent local disk. (Storage abstraction itself lands in Phase 7+
-  alongside the document/cover engines that need it.)
+- `STORAGE_PROVIDER=local` writes under `STORAGE_LOCAL_ROOT` and is served
+  back through the backend's own `GET /api/files/*` route — fine for a
+  single-box deploy with a persistent volume, but every generated file
+  round-trips through the API process. `STORAGE_PROVIDER=s3` (with real
+  AWS credentials, or an S3-compatible endpoint via `AWS_S3_ENDPOINT` —
+  MinIO/R2/Spaces) is required for any multi-instance or ephemeral-disk
+  deployment; it serves files via short-lived presigned URLs straight from
+  the object store instead. Introduced in Phase 7 alongside the document
+  engine that first needed it (interior PDFs/EPUBs/DOCXs); cover images
+  (Phase 8) and export ZIPs (Phase 10) reuse the same provider.
 - **Redis is now load-bearing** (Phase 4): content generation runs through
   a real BullMQ queue, and the worker starts in-process with the backend
   (see ARCHITECTURE.md §5). `npm run docker:dev:up` / `docker:up` already

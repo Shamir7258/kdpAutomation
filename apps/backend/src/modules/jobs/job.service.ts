@@ -28,8 +28,9 @@ export const jobService = {
     batchId: string;
     projectId: string;
     userId: string;
-    chapterId: string;
-    sectionId: string;
+    /** Omitted for project-level jobs that aren't scoped to one chapter/section (e.g. interior generation). */
+    chapterId?: string;
+    sectionId?: string;
   }): Promise<JobDocument> {
     return JobModel.create({ ...input, status: 'pending' });
   },
