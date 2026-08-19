@@ -41,6 +41,12 @@ export class S3StorageProvider implements StorageProvider {
     return getSignedUrl(this.client, command, { expiresIn: PRESIGNED_URL_TTL_SECONDS });
   }
 
+  async read(key: string): Promise<Buffer> {
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.config.bucket, Key: key }));
+    const bytes = await response.Body!.transformToByteArray();
+    return Buffer.from(bytes);
+  }
+
   async delete(key: string): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }));
   }

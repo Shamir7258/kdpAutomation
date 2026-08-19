@@ -10,7 +10,6 @@ import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { ProjectsListPage } from '@/features/projects/projects-list-page';
 import { ProjectDetailPage } from '@/features/projects/project-detail-page';
 import { SettingsPage } from '@/features/settings/settings-page';
-import { ComingSoonPage } from '@/features/coming-soon/coming-soon-page';
 import { BookEditorPage } from '@/features/editor/book-editor-page';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -30,7 +29,6 @@ export default function App() {
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/projects" element={<ProjectsListPage />} />
                 <Route path="/projects/:id" element={<ProjectDetailPage />} />
-                <Route path="/exports" element={<ComingSoonPage title="Exports" phase="Phase 10" />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
               {/* Full-screen focused editor — deliberately outside AppShell (no sidebar/topbar chrome). */}

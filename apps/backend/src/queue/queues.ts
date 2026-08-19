@@ -35,6 +35,12 @@ export interface CoverGenerationJobData {
   batchId: string;
 }
 
+export interface ExportGenerationJobData {
+  projectId: string;
+  userId: string;
+  batchId: string;
+}
+
 const DEFAULT_JOB_OPTIONS = {
   attempts: 3,
   backoff: { type: 'exponential' as const, delay: 5000 },
@@ -46,6 +52,7 @@ let contentGenerationQueue: Queue<ContentGenerationJobData> | undefined;
 let editingQueue: Queue<EditingPipelineJobData> | undefined;
 let interiorGenerationQueue: Queue<InteriorGenerationJobData> | undefined;
 let coverGenerationQueue: Queue<CoverGenerationJobData> | undefined;
+let exportGenerationQueue: Queue<ExportGenerationJobData> | undefined;
 
 /** Lazily constructed so it always binds to the current Redis connection (matters for tests, which may reconfigure REDIS_URL). */
 export function getContentGenerationQueue(): Queue<ContentGenerationJobData> {
@@ -94,6 +101,19 @@ export function getCoverGenerationQueue(): Queue<CoverGenerationJobData> {
   return coverGenerationQueue;
 }
 
+/** Export packaging (zipping already-generated files together) — goes through the same job
+ *  queue pattern as the other generation steps, mostly so its progress is visible the same way
+ *  (jobs list, completion-watching UI) even though the work itself is comparatively quick. */
+export function getExportGenerationQueue(): Queue<ExportGenerationJobData> {
+  if (!exportGenerationQueue) {
+    exportGenerationQueue = new Queue<ExportGenerationJobData>(QUEUE_NAMES.EXPORT, {
+      connection: getRedisConnection(),
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+    });
+  }
+  return exportGenerationQueue;
+}
+
 export async function closeQueues(): Promise<void> {
   if (contentGenerationQueue) {
     await contentGenerationQueue.close();
@@ -110,5 +130,9 @@ export async function closeQueues(): Promise<void> {
   if (coverGenerationQueue) {
     await coverGenerationQueue.close();
     coverGenerationQueue = undefined;
+  }
+  if (exportGenerationQueue) {
+    await exportGenerationQueue.close();
+    exportGenerationQueue = undefined;
   }
 }

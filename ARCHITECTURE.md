@@ -245,6 +245,18 @@ ValidationResult, Export, SystemLog).
   image-generation calls made during cover generation are not recorded in
   `AIUsage` — that schema's cost model is token-based and doesn't fit
   per-image pricing, a documented scope limit for this phase.
+- **`StorageProvider` gained a `read(key)` method** (Phase 10): every prior
+  phase only ever wrote files and handed back a URL; Phase 10's export
+  bundler is the first consumer that needs to read a *previously* generated
+  file's actual bytes back out — to zip up an existing interior render and
+  cover images without caring whether they live on local disk or S3 — so the
+  interface grew a symmetric `read()` alongside its existing `write()`.
+  Separately, Export deliberately does not automate any part of the actual
+  KDP submission: no Amazon publishing API exists to integrate against, so
+  the ZIP is a convenience bundle (interior + covers + a copy-paste-ready
+  metadata summary) plus a README checklist for the human to follow
+  manually, consistent with the brief's explicit prohibition on bypassing
+  Amazon's real login/publish flow.
 
 ## 6. Testing strategy
 

@@ -3,22 +3,20 @@ import {
   LayoutDashboard,
   FolderKanban,
   Sparkles,
-  Package,
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Metadata (Phase 6), Interior (Phase 7), Cover (Phase 8), and Validation
- * (Phase 9) deliberately have no standalone nav item — like
- * Research/Ideas/Outline/Content/Editor before them, all are project-scoped
- * and live inside the project detail page, not as an account-level page.
- * Exports keeps its placeholder page until its phase lands the same way.
+ * Metadata (Phase 6), Interior (Phase 7), Cover (Phase 8), Validation
+ * (Phase 9), and Export (Phase 10) deliberately have no standalone nav
+ * item — like Research/Ideas/Outline/Content/Editor before them, all are
+ * project-scoped and live inside the project detail page, not as an
+ * account-level page.
  */
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
-  { to: '/exports', label: 'Exports', icon: Package },
   { to: '/settings', label: 'Settings', icon: Settings },
 ] as const;
 

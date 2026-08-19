@@ -35,12 +35,12 @@ export class LocalStorageProvider implements StorageProvider {
     await rm(this.resolvePath(key), { force: true });
   }
 
-  /** Used by the backend's file-serving route — not part of the StorageProvider interface
-   *  (S3 has no equivalent; its provider just redirects to a presigned URL instead). */
   async read(key: string): Promise<Buffer> {
     return readFile(this.resolvePath(key));
   }
 
+  /** Local-only convenience, not part of the StorageProvider interface — used by the backend's
+   *  file-serving route to 404 cleanly instead of attempting a read that would throw. */
   async exists(key: string): Promise<boolean> {
     try {
       await stat(this.resolvePath(key));

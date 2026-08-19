@@ -9,6 +9,8 @@ const CONTENT_TYPES: Record<string, string> = {
   pdf: 'application/pdf',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   epub: 'application/epub+zip',
+  png: 'image/png',
+  zip: 'application/zip',
 };
 
 /**

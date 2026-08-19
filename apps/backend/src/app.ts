@@ -23,6 +23,7 @@ import { metadataRouter } from './modules/metadata/metadata.routes.js';
 import { interiorRouter } from './modules/interior/interior.routes.js';
 import { coverRouter } from './modules/cover/cover.routes.js';
 import { validationRouter } from './modules/validation/validation.routes.js';
+import { exportRouter } from './modules/export/export.routes.js';
 import { filesRouter } from './modules/storage/files.routes.js';
 
 export function createApp(): Express {
@@ -53,6 +54,7 @@ export function createApp(): Express {
   app.use('/api/projects/:id/interior', interiorRouter);
   app.use('/api/projects/:id/cover', coverRouter);
   app.use('/api/projects/:id/validation', validationRouter);
+  app.use('/api/projects/:id/export', exportRouter);
   app.use('/api/projects/:id/jobs', jobRouter);
   app.use('/api/projects/:id/chapters/:chapterId/sections/:sectionId/assistant', aiAssistantRouter);
   app.use('/api/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes', editingRouter);

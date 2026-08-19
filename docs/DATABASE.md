@@ -218,6 +218,24 @@ after both output files are generated and stored via the configured
 | `wrapCoverPdfUrl` | string | Same URL scheme as `ebookCoverUrl` |
 | timestamps | Date | `createdAt`/`updatedAt` |
 
+## `export` (Phase 10)
+
+One document per **successful** export bundle — append-only, regenerating
+never deletes a prior successful bundle (same philosophy as
+`interior`/`cover`/`contentversions`/`editpasses`). Written by
+`runExportGeneration` after the ZIP is assembled and stored via the
+configured `StorageProvider`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `projectId`, `userId` | ObjectId | Scope |
+| `batchId` | string | Groups this bundle's job/output; also part of its storage key |
+| `includedFiles` | string[] | The 5 filenames written into the ZIP: `interior.<format>`, `cover-ebook.png`, `cover-wrap-print.pdf`, `metadata.txt`, `README.txt` |
+| `storageKey` | string | `exports/<userId>/<projectId>/<batchId>.zip` — namespaced per the platform-wide `<category>/<userId>/...` convention that `/api/files/*` relies on for ownership checks |
+| `url` | string | Local dev: served via `/api/files/*`. S3: a presigned GET URL (1-hour TTL) |
+| `fileSizeBytes` | number | |
+| timestamps | Date | `createdAt`/`updatedAt` |
+
 ## Migrations
 
 There's no relational schema to migrate yet. `npm run migrate` runs

@@ -169,6 +169,15 @@ Async, mirrors interior generation — `POST` requires only a `BookSpecification
 |---|---|---|
 | GET | `/projects/:id/validation` | `ValidationReportDto` — `{ findings: ValidationFindingDto[], readyToPublish: boolean, checkedAt }`. Each finding is `{ ruleId, category: 'metadata' \| 'content' \| 'interior' \| 'cover', severity: 'error' \| 'warning', message }`. `readyToPublish` is `true` only when there are zero `error`-severity findings — `warning` findings never block it. |
 
+## Export (Phase 10)
+
+Async, mirrors interior/cover generation but takes no body — `POST` always bundles the project's most recently generated `Interior` and `Cover` (requires both to exist, 400 otherwise), enqueues a job on the `export` BullMQ queue, and returns `202`; poll `GET .../jobs`. Every successful bundle creates a new `Export` document — regenerating never deletes a prior package (same append-only philosophy as `Interior`/`Cover`/`ContentVersion`/`EditPass`).
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| POST | `/projects/:id/export` | No body. Requires an `Interior` and a `Cover` to already exist (400 with a specific message for whichever is missing). Builds a ZIP containing exactly 5 files: `interior.<format>`, `cover-ebook.png`, `cover-wrap-print.pdf`, `metadata.txt` (KDP-form-ready summary of the current `Metadata`, or just the working title if none exists), and `README.txt` (fixed manual-submission checklist — this platform never uploads or submits anything to Amazon automatically). |
+| GET | `/projects/:id/export` | `ExportDto[]` — all successful bundles for the project, newest first: `{ id, projectId, batchId, includedFiles, url, fileSizeBytes, createdAt }`. |
+
 ## Prompt templates (Phase 2, admin-only)
 
 | Method | Path | Notes |

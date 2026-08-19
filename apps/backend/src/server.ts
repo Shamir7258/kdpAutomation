@@ -8,6 +8,7 @@ import { startContentGenerationWorker, stopContentGenerationWorker } from './que
 import { startEditingWorker, stopEditingWorker } from './queue/workers/editing.worker.js';
 import { startInteriorWorker, stopInteriorWorker } from './queue/workers/interior.worker.js';
 import { startCoverWorker, stopCoverWorker } from './queue/workers/cover.worker.js';
+import { startExportWorker, stopExportWorker } from './queue/workers/export.worker.js';
 import { closeQueues } from './queue/queues.js';
 import { closeRedisConnection } from './queue/redis.js';
 
@@ -20,6 +21,7 @@ async function main(): Promise<void> {
     startEditingWorker().waitUntilReady(),
     startInteriorWorker().waitUntilReady(),
     startCoverWorker().waitUntilReady(),
+    startExportWorker().waitUntilReady(),
   ]);
 
   const app = createApp();
@@ -34,6 +36,7 @@ async function main(): Promise<void> {
       await stopEditingWorker();
       await stopInteriorWorker();
       await stopCoverWorker();
+      await stopExportWorker();
       await closeQueues();
       await closeRedisConnection();
       process.exit(0);

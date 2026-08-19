@@ -25,6 +25,7 @@ import { EditPassModel } from '../modules/editing/edit-pass.model.js';
 import { MetadataModel } from '../modules/metadata/metadata.model.js';
 import { InteriorModel } from '../modules/interior/interior.model.js';
 import { CoverModel } from '../modules/cover/cover.model.js';
+import { ExportModel } from '../modules/export/export.model.js';
 
 async function main(): Promise<void> {
   await connectDatabase();
@@ -45,6 +46,7 @@ async function main(): Promise<void> {
     MetadataModel,
     InteriorModel,
     CoverModel,
+    ExportModel,
   ]) {
     await model.syncIndexes();
     logger.info({ model: model.modelName }, 'indexes synced');
