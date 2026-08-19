@@ -8,6 +8,11 @@ COPY apps/backend/package.json apps/backend/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY packages/config/package.json packages/config/package.json
+COPY packages/ai/package.json packages/ai/package.json
+COPY packages/storage/package.json packages/storage/package.json
+COPY packages/document-engine/package.json packages/document-engine/package.json
+COPY packages/cover-engine/package.json packages/cover-engine/package.json
+COPY packages/kdp-validator/package.json packages/kdp-validator/package.json
 RUN npm ci
 
 FROM deps AS build

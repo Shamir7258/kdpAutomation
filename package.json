@@ -10,6 +10,9 @@
   "engines": {
     "node": ">=20"
   },
+  "overrides": {
+    "esbuild": "^0.28.1"
+  },
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w @kdp/backend\" \"npm run dev -w @kdp/frontend\"",
     "build": "npm run build --workspaces --if-present",

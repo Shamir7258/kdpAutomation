@@ -168,9 +168,10 @@ ValidationResult, Export, SystemLog).
   (not a cookie) and only the refresh cookie is `httpOnly`/`sameSite=lax`,
   classic CSRF (which relies on ambient cookie auth) has no attack
   surface. `sameSite=lax` is retained as defense in depth.
-- **Rate limiting**: `express-rate-limit` with in-memory store for now;
-  swap for a Redis store note left in code once multi-instance deployment
-  is needed.
+- **Rate limiting**: `express-rate-limit` backed by a Redis store
+  (`rate-limit-redis`, dedicated connection separate from BullMQ's — see
+  `common/middleware/rate-limit.ts`), so limits are enforced consistently
+  across multiple backend instances rather than per-process.
 - **Idea generation is synchronous, not a BullMQ job** (Phase 2): the brief's
   phase ordering puts "Book idea generation" in Phase 2 and BullMQ/job
   infrastructure in Phase 4. A handful of AI calls for idea generation

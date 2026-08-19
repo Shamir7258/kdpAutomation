@@ -11,6 +11,7 @@ import { startCoverWorker, stopCoverWorker } from './queue/workers/cover.worker.
 import { startExportWorker, stopExportWorker } from './queue/workers/export.worker.js';
 import { closeQueues } from './queue/queues.js';
 import { closeRedisConnection } from './queue/redis.js';
+import { closeRateLimitRedisConnection } from './common/middleware/rate-limit.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -39,6 +40,7 @@ async function main(): Promise<void> {
       await stopExportWorker();
       await closeQueues();
       await closeRedisConnection();
+      await closeRateLimitRedisConnection();
       process.exit(0);
     });
   };
