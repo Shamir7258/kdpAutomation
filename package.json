@@ -22,7 +22,8 @@
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
     "docker:dev:up": "docker compose -f infrastructure/docker/docker-compose.dev.yml up -d",
     "docker:dev:down": "docker compose -f infrastructure/docker/docker-compose.dev.yml down",
-    "migrate": "npm run migrate -w @kdp/backend"
+    "migrate": "npm run migrate -w @kdp/backend",
+    "seed:admin": "npm run seed:admin -w @kdp/backend --"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.18.0",

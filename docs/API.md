@@ -178,11 +178,24 @@ Async, mirrors interior/cover generation but takes no body — `POST` always bun
 | POST | `/projects/:id/export` | No body. Requires an `Interior` and a `Cover` to already exist (400 with a specific message for whichever is missing). Builds a ZIP containing exactly 5 files: `interior.<format>`, `cover-ebook.png`, `cover-wrap-print.pdf`, `metadata.txt` (KDP-form-ready summary of the current `Metadata`, or just the working title if none exists), and `README.txt` (fixed manual-submission checklist — this platform never uploads or submits anything to Amazon automatically). |
 | GET | `/projects/:id/export` | `ExportDto[]` — all successful bundles for the project, newest first: `{ id, projectId, batchId, includedFiles, url, fileSizeBytes, createdAt }`. |
 
-## Prompt templates (Phase 2, admin-only)
+## Admin (Phase 11)
+
+All routes require `role: admin` (`requireAuth, requireRole('admin')`, same router-level composition `/prompt-templates` has used since Phase 2).
+
+| Method | Path | Body / Notes |
+|---|---|---|
+| GET | `/admin/users` | `AdminUserDto[]` — `{ id, email, name, role, disabled, projectCount, createdAt }`, newest-first. `projectCount` is a live count of that user's non-deleted `Project` docs. |
+| PATCH | `/admin/users/:userId` | Body `{ role?, disabled? }` (`updateUserSchema`) → updated `AdminUserDto`. **Self-protection**: 400s if an admin tries to demote themselves to `'user'` or disable their own account ("You cannot remove your own admin access or disable your own account.") — there's no self-service path back to admin, so this guards against accidental lockout. |
+| GET | `/admin/validation-rules` | `ValidationRuleDto[]` — a thin read-only projection of `@kdp/kdp-validator`'s `listRules()` (`{ id, label, category }` only; the rule's `check` function is dropped, not serialized). |
+| GET | `/admin/system-info` | `SystemInfoDto` — `{ nodeEnv, aiProvider, imageProvider, storageProvider, aiUsage: { totalCostUsd, totalCalls } }`. Hand-picked safe fields only — **deliberately never spreads the raw parsed config object**, which also carries `JWT_SECRET`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `AWS_SECRET_ACCESS_KEY`, `DATABASE_URL`, `REDIS_URL` with no existing safe/secret separation. `aiUsage` is a platform-wide aggregate (`aiUsageService.getGlobalSummary()`), not scoped to any one user. |
+
+## Prompt templates (Phase 2, admin-only; CRUD completed Phase 11)
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/prompt-templates` | Lists all templates. Requires `role: admin`. Create/update/delete land in Phase 11 alongside the rest of the admin panel. |
+| GET | `/prompt-templates` | Lists all templates. Requires `role: admin`. |
+| POST | `/prompt-templates` | Body `CreatePromptTemplateInput` (`name`, `description`, `systemPrompt`, `userPrompt`, `variables`) → 201 `PromptTemplateDto`. 409s on a duplicate `name`. |
+| PATCH | `/prompt-templates/:id` | Body `UpdatePromptTemplateInput` — any subset of `description`/`systemPrompt`/`userPrompt`/`variables`/`active` → updated `PromptTemplateDto`. `active: false` is how a template is "removed" without a hard delete (no DELETE route). Every edit bumps `version`. |
 
 ## Dashboard
 

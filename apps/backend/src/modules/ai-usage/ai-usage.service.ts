@@ -37,4 +37,18 @@ export const aiUsageService = {
     ]);
     return { totalCostUsd: agg?.totalCostUsd ?? 0, totalCalls: agg?.totalCalls ?? 0 };
   },
+
+  /** Same shape as getSummary, without the per-user $match — platform-wide total for the admin panel. */
+  async getGlobalSummary(): Promise<{ totalCostUsd: number; totalCalls: number }> {
+    const [agg] = await AIUsageModel.aggregate<{ totalCostUsd: number; totalCalls: number }>([
+      {
+        $group: {
+          _id: null,
+          totalCostUsd: { $sum: { $ifNull: ['$estimatedCostUsd', 0] } },
+          totalCalls: { $sum: 1 },
+        },
+      },
+    ]);
+    return { totalCostUsd: agg?.totalCostUsd ?? 0, totalCalls: agg?.totalCalls ?? 0 };
+  },
 };

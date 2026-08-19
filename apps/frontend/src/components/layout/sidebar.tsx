@@ -4,15 +4,20 @@ import {
   FolderKanban,
   Sparkles,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/features/auth/auth-context';
 
 /**
  * Metadata (Phase 6), Interior (Phase 7), Cover (Phase 8), Validation
  * (Phase 9), and Export (Phase 10) deliberately have no standalone nav
  * item — like Research/Ideas/Outline/Content/Editor before them, all are
  * project-scoped and live inside the project detail page, not as an
- * account-level page.
+ * account-level page. Admin (Phase 11) DOES get a standalone nav item —
+ * unlike those, it's genuinely account/platform-level, not tied to one
+ * project — but only rendered for `role: 'admin'` users; the route itself
+ * is also guarded (AdminRoute) since hiding a link isn't access control.
  */
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -21,6 +26,8 @@ const NAV_ITEMS = [
 ] as const;
 
 export function Sidebar() {
+  const { user } = useAuth();
+
   return (
     <aside className="hidden w-60 shrink-0 border-r bg-card md:flex md:flex-col">
       <div className="flex h-14 items-center gap-2 border-b px-5">
@@ -46,6 +53,20 @@ export function Sidebar() {
             {label}
           </NavLink>
         ))}
+        {user?.role === 'admin' && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                isActive && 'bg-accent text-accent-foreground',
+              )
+            }
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Admin
+          </NavLink>
+        )}
       </nav>
     </aside>
   );

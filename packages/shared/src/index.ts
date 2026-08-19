@@ -18,3 +18,4 @@ export * from './interior.schemas.js';
 export * from './cover.schemas.js';
 export * from './validation.schemas.js';
 export * from './export.schemas.js';
+export * from './admin.schemas.js';

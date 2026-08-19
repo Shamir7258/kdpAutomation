@@ -24,6 +24,7 @@ import { interiorRouter } from './modules/interior/interior.routes.js';
 import { coverRouter } from './modules/cover/cover.routes.js';
 import { validationRouter } from './modules/validation/validation.routes.js';
 import { exportRouter } from './modules/export/export.routes.js';
+import { adminRouter } from './modules/admin/admin.routes.js';
 import { filesRouter } from './modules/storage/files.routes.js';
 
 export function createApp(): Express {
@@ -60,6 +61,7 @@ export function createApp(): Express {
   app.use('/api/projects/:id/chapters/:chapterId/sections/:sectionId/edit-passes', editingRouter);
   app.use('/api/dashboard', dashboardRouter);
   app.use('/api/prompt-templates', promptTemplateRouter);
+  app.use('/api/admin', adminRouter);
   app.use('/api/files', filesRouter);
 
   app.use(notFoundHandler);

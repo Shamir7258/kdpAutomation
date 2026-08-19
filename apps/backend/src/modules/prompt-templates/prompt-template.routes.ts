@@ -1,15 +1,13 @@
 import { Router } from 'express';
+import { createPromptTemplateSchema, updatePromptTemplateSchema } from '@kdp/shared';
 import { asyncHandler } from '../../common/middleware/async-handler.js';
-import { ok } from '../../common/http/respond.js';
+import { validate } from '../../common/middleware/validate.js';
 import { requireAuth, requireRole } from '../auth/auth.guard.js';
-import { promptTemplateService } from './prompt-template.service.js';
+import { promptTemplateController } from './prompt-template.controller.js';
 
 export const promptTemplateRouter = Router();
 promptTemplateRouter.use(requireAuth, requireRole('admin'));
 
-promptTemplateRouter.get(
-  '/',
-  asyncHandler(async (_req, res) => {
-    ok(res, await promptTemplateService.list());
-  }),
-);
+promptTemplateRouter.get('/', asyncHandler(promptTemplateController.list));
+promptTemplateRouter.post('/', validate(createPromptTemplateSchema), asyncHandler(promptTemplateController.create));
+promptTemplateRouter.patch('/:id', validate(updatePromptTemplateSchema), asyncHandler(promptTemplateController.update));

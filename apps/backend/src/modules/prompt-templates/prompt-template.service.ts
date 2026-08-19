@@ -1,3 +1,4 @@
+import type { CreatePromptTemplateInput, PromptTemplateDto, UpdatePromptTemplateInput } from '@kdp/shared';
 import { AppError } from '../../common/errors/app-error.js';
 import { PromptTemplateModel, type PromptTemplateDocument } from './prompt-template.model.js';
 
@@ -36,7 +37,7 @@ const DEFAULT_TEMPLATES: DefaultTemplate[] = [
   },
 ];
 
-function toRecord(doc: PromptTemplateDocument) {
+function toRecord(doc: PromptTemplateDocument): PromptTemplateDto {
   return {
     id: doc._id.toString(),
     name: doc.name,
@@ -46,6 +47,8 @@ function toRecord(doc: PromptTemplateDocument) {
     userPrompt: doc.userPrompt,
     variables: doc.variables,
     active: doc.active,
+    createdAt: doc.createdAt.toISOString(),
+    updatedAt: doc.updatedAt.toISOString(),
   };
 }
 
@@ -78,8 +81,38 @@ export const promptTemplateService = {
     return toRecord(doc);
   },
 
-  async list() {
+  async list(): Promise<PromptTemplateDto[]> {
     const docs = await PromptTemplateModel.find().sort({ name: 1 });
     return docs.map(toRecord);
+  },
+
+  async getById(id: string): Promise<PromptTemplateDto> {
+    const doc = await PromptTemplateModel.findById(id);
+    if (!doc) {
+      throw AppError.notFound('Prompt template not found.');
+    }
+    return toRecord(doc);
+  },
+
+  async create(input: CreatePromptTemplateInput): Promise<PromptTemplateDto> {
+    const existing = await PromptTemplateModel.findOne({ name: input.name });
+    if (existing) {
+      throw AppError.conflict(`A prompt template named "${input.name}" already exists.`);
+    }
+    const doc = await PromptTemplateModel.create({ ...input, version: 1, active: true });
+    return toRecord(doc);
+  },
+
+  /** Any edit bumps `version` — templates are referenced by name (not id) at call sites, so the
+   *  version number is the only trace of "this prompt changed" for anyone auditing generated output. */
+  async update(id: string, input: UpdatePromptTemplateInput): Promise<PromptTemplateDto> {
+    const doc = await PromptTemplateModel.findById(id);
+    if (!doc) {
+      throw AppError.notFound('Prompt template not found.');
+    }
+    Object.assign(doc, input);
+    doc.version += 1;
+    await doc.save();
+    return toRecord(doc);
   },
 };

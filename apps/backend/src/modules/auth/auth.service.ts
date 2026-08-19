@@ -73,6 +73,9 @@ export const authService = {
     if (!valid) {
       throw new AppError('INVALID_CREDENTIALS', 'Invalid email or password.', 401);
     }
+    if (user.disabled) {
+      throw AppError.forbidden('This account has been disabled.');
+    }
     const tokens = await issueSession(user, meta);
     return { user: toUserDto(user), tokens };
   },
@@ -87,6 +90,11 @@ export const authService = {
     const user = await UserModel.findById(session.userId);
     if (!user) {
       throw new AppError('INVALID_REFRESH_TOKEN', 'Session expired or revoked. Please log in again.', 401);
+    }
+    if (user.disabled) {
+      session.revokedAt = new Date();
+      await session.save();
+      throw AppError.forbidden('This account has been disabled.');
     }
 
     session.revokedAt = new Date();

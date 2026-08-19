@@ -11,6 +11,7 @@ PLAN.md and ARCHITECTURE.md §4/§41 for the full eventual model list).
 | `passwordHash` | string | bcrypt, cost from `BCRYPT_COST` |
 | `name` | string | |
 | `role` | `'admin' \| 'user'` | default `'user'` |
+| `disabled` | boolean | default `false` (Phase 11). Checked only at login and at refresh — not on every request via `requireAuth`, which stays a pure JWT-verify with no DB lookup |
 | `organizationId` | ObjectId \| null | reserved for future org/team model (§48) |
 | `createdAt` / `updatedAt` | Date | |
 
@@ -52,7 +53,7 @@ lets `$text` search be scoped by `userId` without a full collection scan),
 | Field | Type | Notes |
 |---|---|---|
 | `name` | string | unique — looked up by code, e.g. `BOOK_IDEA_GENERATOR` |
-| `version` | number | bumped on edit (Phase 11 admin UI) |
+| `version` | number | bumped on every edit via `PATCH /api/prompt-templates/:id` (Phase 11 admin UI) |
 | `systemPrompt` / `userPrompt` | string | `userPrompt` contains `{{variable}}` placeholders rendered by `AIProvider.generatePrompt()` |
 | `variables` | string[] | documents which placeholders the template expects |
 | `active` | boolean | `getActiveByName()` only returns active templates |

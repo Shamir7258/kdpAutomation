@@ -178,12 +178,15 @@ ValidationResult, Export, SystemLog).
   `async`/`await` service call for now; it should move onto the job queue
   once Phase 4 introduces one, for consistency with chapter/section
   generation (which genuinely needs to be a job).
-- **PromptTemplate admin CRUD is read-only for now**: `PromptTemplate` is a
-  real Mongoose-backed model with a seeded default (`BOOK_IDEA_GENERATOR`)
-  and an admin-only `GET /api/prompt-templates`, but create/update/delete
-  routes and an editor UI are deferred to Phase 11 (Admin Panel), where the
-  rest of the admin surface (users, providers, book types, templates,
-  validation rules) is built together rather than piecemeal.
+- **PromptTemplate admin CRUD landed in Phase 11**: `PromptTemplate` is a
+  real Mongoose-backed model with a seeded default (`BOOK_IDEA_GENERATOR`);
+  the admin-only `GET /api/prompt-templates` shipped in Phase 2, and
+  `POST`/`PATCH /:id` (plus an editor UI) were deliberately deferred until
+  Phase 11, where the rest of the admin surface (users, book types,
+  templates, validation rules, system info) was built together rather than
+  piecemeal. There is still no hard-delete route — `PATCH` with
+  `active: false` is the "remove without deleting" mechanism, reusing the
+  field the Phase 2 model already had. Every edit bumps `version`.
 - **The BullMQ worker runs in-process with the HTTP server** (Phase 4):
   `startContentGenerationWorker()` is called from the same `server.ts` that
   starts Express, not a separate process/container. The brief's Docker
@@ -257,6 +260,14 @@ ValidationResult, Export, SystemLog).
   metadata summary) plus a README checklist for the human to follow
   manually, consistent with the brief's explicit prohibition on bypassing
   Amazon's real login/publish flow.
+- **`disabled` accounts are only checked at login/refresh, not on every
+  `requireAuth` call** (Phase 11): `requireAuth` deliberately stays a pure
+  JWT-verify with no DB round-trip, for performance on the hot request path.
+  The tradeoff is that an already-issued access token remains valid for its
+  ~15-minute lifetime after an admin disables the account — acceptable
+  because access tokens are already short-lived by design; a disabled
+  account is locked out of starting a new session or rotating its refresh
+  token within one token lifetime regardless.
 
 ## 6. Testing strategy
 
